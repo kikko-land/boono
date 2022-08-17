@@ -3,6 +3,7 @@
   "version": "0.1.1",
   "author": "Sergey Popov",
   "license": "MIT",
+  "homepage": "https://boono.netlify.app",
   "exports": {
     ".": {
       "types": "./dist/boono/src/index.d.ts",

@@ -3,6 +3,16 @@
   "version": "0.1.1",
   "author": "Sergey Popov",
   "license": "MIT",
+  "homepage": "https://boono.netlify.app",
+  "description": "An advanced SQL builder, specially tailored for SQLite",
+  "keywords": [
+    "typescript",
+    "sql",
+    "sqlite",
+    "typesafe",
+    "sqlite3",
+    "sql-builder"
+  ],
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "types": "./src/index.ts",
