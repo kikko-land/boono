@@ -61,6 +61,25 @@ describe("windowFn", () => {
         `group_concat(b, '.') OVER (func PARTITION BY "kek", "puk" ORDER BY "kek" DESC)`
       );
     });
+
+    it("works with frame", () => {
+      expect(
+        windowFn(sql`group_concat(b, '.')`)
+          .over(
+            windowBody()
+              .fromBase("func")
+              .partitionBy("kek")
+              .partitionBy("puk")
+              .withFrame(
+                sql`RANGE BETWEEN UNBOUND PRECEDING AND UNBOUND FOLLOWING EXCLUDE GROUP`
+              )
+              .orderBy(desc("kek"))
+          )
+          .toSql().raw
+      ).to.eq(
+        `group_concat(b, '.') OVER (func PARTITION BY "kek", "puk" ORDER BY "kek" DESC RANGE BETWEEN UNBOUND PRECEDING AND UNBOUND FOLLOWING EXCLUDE GROUP)`
+      );
+    });
   });
 
   // it("works with select", () => {

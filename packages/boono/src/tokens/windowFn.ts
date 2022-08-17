@@ -74,15 +74,13 @@ export interface IWindowBodyClause
     partitionByValues: (IBaseToken | ISql | string)[];
     baseWindowName?: string;
     ordersBox: IOrdersBoxTerm;
+    frameValue?: IBaseToken | ISql;
   };
   fromBase(name: string): this;
   partitionBy(partitionBy: IBaseToken | ISql | string): this;
   withoutPartitionBy(): this;
-  // _fn: ISqlAdapter;
-  // _filterValue?: IBaseToken<TokenType>;
-  // _overValue?: IBaseToken<TokenType.WindowBody>;
-  // filter(...values: IConditionValue[]): this;
-  // over(arg: IBaseToken<TokenType>): this;
+  withFrame(sql: IBaseToken | ISql): this;
+  withoutFrame(): this;
 }
 
 export const windowBody = (): IWindowBodyClause => {
@@ -109,6 +107,12 @@ export const windowBody = (): IWindowBodyClause => {
     withoutPartitionBy() {
       return { ...this, __state: { ...this.__state, partitionByValues: [] } };
     },
+    withFrame(sql: IBaseToken | ISql) {
+      return { ...this, __state: { ...this.__state, frameValue: sql } };
+    },
+    withoutFrame() {
+      return { ...this, __state: { ...this.__state, frameValue: undefined } };
+    },
     toSql() {
       return sql.join(
         [
@@ -124,6 +128,7 @@ export const windowBody = (): IWindowBodyClause => {
               )}`
             : sql.empty,
           this.__state.ordersBox,
+          this.__state.frameValue ? this.__state.frameValue : sql.empty,
         ],
         " "
       );
