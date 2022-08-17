@@ -11,6 +11,7 @@ export enum TokenType {
   Insert = "Insert",
   Values = "Values",
   OrderTerm = "OrderTerm",
+  OrdersBoxTerm = "OrdersBoxTerm",
   LimitOffsetTerm = "LimitOffsetTerm",
   RawSql = "RawSql",
   CompoundOperator = "CompoundOperator",

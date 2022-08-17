@@ -18,7 +18,12 @@ import {
   withoutLimit,
   withoutOffset,
 } from "../limitOffset";
-import { IOrderState, orderBy, withoutOrder } from "../order";
+import {
+  IOrderState,
+  orderBy,
+  orderByForState,
+  withoutOrderForState,
+} from "../order";
 
 export interface IValuesStatement
   extends IBaseToken<TokenType.Values>,
@@ -36,11 +41,11 @@ export const values = (
     type: TokenType.Values,
     _values: vals,
     _compoundValues: [],
-    _orderByValues: [],
+    _ordersBox: orderBy(),
     _limitOffsetValue: buildInitialLimitOffsetState(),
 
-    orderBy,
-    withoutOrder,
+    orderBy: orderByForState,
+    withoutOrder: withoutOrderForState,
 
     union,
     unionAll,
@@ -66,9 +71,7 @@ export const values = (
           this._compoundValues.length > 0
             ? sql.join(this._compoundValues, " ")
             : null,
-          this._orderByValues.length > 0
-            ? sql.join([sql`ORDER BY`, sql.join(this._orderByValues)], " ")
-            : null,
+          this._ordersBox,
           this._limitOffsetValue.toSql().isEmpty
             ? null
             : this._limitOffsetValue,

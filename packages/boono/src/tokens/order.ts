@@ -32,6 +32,22 @@ const orderTerm = (
   };
 };
 
+export interface IOrdersBoxTerm extends IBaseToken<TokenType.OrdersBoxTerm> {
+  _values: IOrderTerm[];
+}
+
+export const orderBy = (...args: IOrderTerm[]): IOrdersBoxTerm => {
+  return {
+    _values: args,
+    type: TokenType.OrdersBoxTerm,
+    toSql() {
+      return this._values.length > 0
+        ? sql.join([sql`ORDER BY`, sql.join(this._values)], " ")
+        : sql.empty;
+    },
+  };
+};
+
 export const desc = (
   val: IBaseToken | ISqlAdapter | string,
   nullOrder?: "NULLS FIRST" | "NULLS LAST"
@@ -47,25 +63,31 @@ export const asc = (
 };
 
 export interface IOrderState {
-  _orderByValues: IOrderTerm[];
+  _ordersBox: IOrdersBoxTerm;
 
-  orderBy: typeof orderBy;
-  withoutOrder: typeof withoutOrder;
+  orderBy: typeof orderByForState;
+  withoutOrder: typeof withoutOrderForState;
 }
 
-export function orderBy<T extends IOrderState>(
+export function orderByForState<T extends IOrderState>(
   this: T,
   ...orderTerm: IOrderTerm[]
 ): T {
   return {
     ...this,
-    _orderByValues: [...this._orderByValues, ...orderTerm],
+    _ordersBox: {
+      ...this._ordersBox,
+      _values: [...this._ordersBox._values, ...orderTerm],
+    },
   };
 }
 
-export function withoutOrder<T extends IOrderState>(this: T): T {
+export function withoutOrderForState<T extends IOrderState>(this: T): T {
   return {
     ...this,
-    _orderByValue: undefined,
+    _ordersBox: {
+      ...this._ordersBox,
+      _values: [],
+    },
   };
 }

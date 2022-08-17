@@ -41,7 +41,12 @@ import {
   withoutLimit,
   withoutOffset,
 } from "../limitOffset";
-import { IOrderState, orderBy, withoutOrder } from "../order";
+import {
+  IOrderState,
+  orderBy,
+  orderByForState,
+  withoutOrderForState,
+} from "../order";
 import { toToken } from "../rawSql";
 import { IWhereState, orWhere, where } from "../where";
 import { IValuesStatement } from "./values";
@@ -117,7 +122,7 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
     _distinctValue: false,
     _groupByValues: [],
     _compoundValues: [],
-    _orderByValues: [],
+    _ordersBox: orderBy(),
     _joinValues: [],
     _limitOffsetValue: buildInitialLimitOffsetState(),
     select(...selectArgs: ISelectArgType[]): ISelectStatement {
@@ -153,8 +158,8 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
     having(val: IBaseToken | ISql): ISelectStatement {
       return { ...this, _havingValue: toToken(val) };
     },
-    orderBy,
-    withoutOrder,
+    orderBy: orderByForState,
+    withoutOrder: withoutOrderForState,
 
     with: With,
     withoutWith,
@@ -234,9 +239,7 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
           this._compoundValues.length > 0
             ? sql.join(this._compoundValues, " ")
             : null,
-          this._orderByValues.length > 0
-            ? sql.join([sql`ORDER BY`, sql.join(this._orderByValues)], " ")
-            : null,
+          this._ordersBox,
           this._limitOffsetValue.toSql().isEmpty
             ? null
             : this._limitOffsetValue,

@@ -26,7 +26,8 @@ const updateRegex = /update\s+(or\s+\w+\s+)?/gim;
 
 const strip = (str: string) => {
   return str
-    .replace(/"/g, "")
+    // eslint-disable-next-line no-control-regex
+    .replace(/[^\u0001-\u007f]"/g, "")
     .split(".")
     .map((v) => '"' + v + '"')
     .join(".");
@@ -237,6 +238,9 @@ export function sql(
 sql.raw = (value: string) => {
   return sql([value]);
 };
+sql.strip = (str: string) => {
+  return sql.raw((str).replace(/[^a-zA-Z0-9]+/g, ''));
+}
 sql.liter = (str: string) => {
   return sql.raw(strip(str));
 };
