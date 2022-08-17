@@ -5,7 +5,7 @@
   "license": "MIT",
   "exports": {
     ".": {
-      "types": "./dist/query-builder/src/index.d.ts",
+      "types": "./dist/boono/src/index.d.ts",
       "es2015": "./dist/index.es.js",
       "require": "./dist/index.umd.js",
       "import": "./dist/index.es.js",
@@ -14,7 +14,7 @@
   },
   "main": "./dist/index.umd.js",
   "module": "./dist/index.es.js",
-  "types": "./dist/query-builder/src/index.d.ts",
+  "types": "./dist/boono/src/index.d.ts",
   "scripts": {
     "build": "yarn vite build",
     "lint": "eslint \"src/**/*.{tsx,ts}\" --max-warnings=0",

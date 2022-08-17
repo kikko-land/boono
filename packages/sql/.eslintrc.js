@@ -3,7 +3,7 @@ const rootDir = process.cwd().includes("packages/sql")
   : "./packages/sql";
 
 module.exports = {
-  extends: ["../common-scripts/eslintrc.cjs"],
+  extends: ["../../node_modules/@kikko-land/common-scripts/eslintrc.cjs"],
   parserOptions: {
     ecmaFeatures: {
       jsx: true,
