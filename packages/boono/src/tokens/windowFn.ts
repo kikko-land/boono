@@ -3,6 +3,7 @@ import { ISql, ISqlAdapter, sql } from "@kikko-land/sql";
 import { IBaseToken, TokenType } from "../types";
 import { and, conditionValuesToToken, IConditionValue } from "./binary";
 import {
+  IOrdersBoxTerm,
   IOrderState,
   orderBy,
   orderByForState,
@@ -11,9 +12,11 @@ import {
 import { toToken } from "./rawSql";
 
 export interface IWindowClause extends IBaseToken<TokenType.WindowFn> {
-  _fn: ISqlAdapter;
-  _filterValue?: IBaseToken<TokenType>;
-  _overValue?: IBaseToken<TokenType.WindowBody>;
+  __state: {
+    fn: ISqlAdapter;
+    filterValue?: IBaseToken<TokenType>;
+    overValue?: IBaseToken<TokenType.WindowBody>;
+  };
 
   filter(...values: IConditionValue[]): this;
   over(arg?: IBaseToken<TokenType>): this;
@@ -21,34 +24,42 @@ export interface IWindowClause extends IBaseToken<TokenType.WindowFn> {
 
 export const windowFn = (fn: ISqlAdapter | IBaseToken): IWindowClause => {
   return {
-    _fn: fn,
+    __state: {
+      fn,
+    },
     type: TokenType.WindowFn,
     filter(...values) {
-      const finalValues = this._filterValue
-        ? [this._filterValue, ...conditionValuesToToken(values)]
+      const finalValues = this.__state.filterValue
+        ? [this.__state.filterValue, ...conditionValuesToToken(values)]
         : conditionValuesToToken(values);
 
       if (finalValues.length > 1) {
         return {
           ...this,
-          _filterValue: and(...finalValues),
+          __state: {
+            ...this.__state,
+            filterValue: and(...finalValues),
+          },
         };
       } else {
-        return { ...this, _filterValue: finalValues[0] };
+        return {
+          ...this,
+          __state: { ...this.__state, filterValue: finalValues[0] },
+        };
       }
     },
     over(body?: IWindowBodyClause) {
-      return { ...this, _overValue: body };
+      return { ...this, __state: { ...this.__state, overValue: body } };
     },
     toSql() {
       return sql.join(
         [
-          this._fn,
-          this._filterValue
-            ? sql`FILTER (WHERE ${this._filterValue})`
+          this.__state.fn,
+          this.__state.filterValue
+            ? sql`FILTER (WHERE ${this.__state.filterValue})`
             : sql.empty,
           sql`OVER`,
-          this._overValue ? sql`(${this._overValue})` : sql`()`,
+          this.__state.overValue ? sql`(${this.__state.overValue})` : sql`()`,
         ],
         " "
       );
@@ -59,8 +70,11 @@ export const windowFn = (fn: ISqlAdapter | IBaseToken): IWindowClause => {
 export interface IWindowBodyClause
   extends IBaseToken<TokenType.WindowBody>,
     IOrderState {
-  _partitionByValues: (IBaseToken | ISql | string)[];
-  _baseWindowName?: string;
+  __state: {
+    partitionByValues: (IBaseToken | ISql | string)[];
+    baseWindowName?: string;
+    ordersBox: IOrdersBoxTerm;
+  };
   fromBase(name: string): this;
   partitionBy(partitionBy: IBaseToken | ISql | string): this;
   withoutPartitionBy(): this;
@@ -73,36 +87,43 @@ export interface IWindowBodyClause
 
 export const windowBody = (): IWindowBodyClause => {
   return {
-    _partitionByValues: [],
-    _ordersBox: orderBy(),
+    __state: {
+      partitionByValues: [],
+      ordersBox: orderBy(),
+    },
     type: TokenType.WindowBody,
     fromBase(name: string) {
-      return { ...this, _baseWindowName: name };
+      return { ...this, __state: { ...this.__state, baseWindowName: name } };
     },
     orderBy: orderByForState,
     withoutOrder: withoutOrderForState,
     partitionBy(partitionBy: IBaseToken | ISql | string) {
       return {
         ...this,
-        _partitionByValues: [...this._partitionByValues, partitionBy],
+        __state: {
+          ...this.__state,
+          partitionByValues: [...this.__state.partitionByValues, partitionBy],
+        },
       };
     },
     withoutPartitionBy() {
-      return { ...this, _partitionByValues: [] };
+      return { ...this, __state: { ...this.__state, partitionByValues: [] } };
     },
     toSql() {
       return sql.join(
         [
-          this._baseWindowName ? sql.strip(this._baseWindowName) : sql.empty,
-          this._partitionByValues.length > 0
+          this.__state.baseWindowName
+            ? sql.strip(this.__state.baseWindowName)
+            : sql.empty,
+          this.__state.partitionByValues.length > 0
             ? sql`PARTITION BY ${sql.join(
-                this._partitionByValues.map((val) =>
+                this.__state.partitionByValues.map((val) =>
                   typeof val === "string" ? sql.liter(val) : toToken(val)
                 ),
                 ", "
               )}`
             : sql.empty,
-          this._ordersBox,
+          this.__state.ordersBox,
         ],
         " "
       );

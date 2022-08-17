@@ -4,26 +4,32 @@ import { IBaseToken, TokenType } from "../types";
 import { toToken } from "./rawSql";
 
 export interface IOrderTerm extends IBaseToken<TokenType.OrderTerm> {
-  _orderType: "DESC" | "ASC";
-  _val: IBaseToken | string;
-  _nullOrder?: "NULLS FIRST" | "NULLS LAST";
+  __state: {
+    orderType: "DESC" | "ASC";
+    val: IBaseToken | string;
+    nullOrder?: "NULLS FIRST" | "NULLS LAST";
+  };
 }
 
 const orderTerm = (
-  type: IOrderTerm["_orderType"],
+  type: IOrderTerm["__state"]["orderType"],
   val: IBaseToken | ISqlAdapter | string,
-  nullOrder: IOrderTerm["_nullOrder"]
+  nullOrder: IOrderTerm["__state"]["nullOrder"]
 ): IOrderTerm => {
   return {
     type: TokenType.OrderTerm,
-    _orderType: type,
-    _val: typeof val === "string" ? val : toToken(val),
-    _nullOrder: nullOrder,
+    __state: {
+      orderType: type,
+      val: typeof val === "string" ? val : toToken(val),
+      nullOrder: nullOrder,
+    },
     toSql() {
       return sql.join(
         [
-          typeof this._val === "string" ? sql.liter(this._val) : this._val,
-          sql.raw(this._orderType),
+          typeof this.__state.val === "string"
+            ? sql.liter(this.__state.val)
+            : this.__state.val,
+          sql.raw(this.__state.orderType),
           nullOrder ? sql.raw(nullOrder) : sql.empty,
         ],
         " "
@@ -33,16 +39,20 @@ const orderTerm = (
 };
 
 export interface IOrdersBoxTerm extends IBaseToken<TokenType.OrdersBoxTerm> {
-  _values: IOrderTerm[];
+  __state: {
+    values: IOrderTerm[];
+  };
 }
 
 export const orderBy = (...args: IOrderTerm[]): IOrdersBoxTerm => {
   return {
-    _values: args,
+    __state: {
+      values: args,
+    },
     type: TokenType.OrdersBoxTerm,
     toSql() {
-      return this._values.length > 0
-        ? sql.join([sql`ORDER BY`, sql.join(this._values)], " ")
+      return this.__state.values.length > 0
+        ? sql.join([sql`ORDER BY`, sql.join(this.__state.values)], " ")
         : sql.empty;
     },
   };
@@ -63,7 +73,9 @@ export const asc = (
 };
 
 export interface IOrderState {
-  _ordersBox: IOrdersBoxTerm;
+  __state: {
+    ordersBox: IOrdersBoxTerm;
+  };
 
   orderBy: typeof orderByForState;
   withoutOrder: typeof withoutOrderForState;
@@ -75,9 +87,15 @@ export function orderByForState<T extends IOrderState>(
 ): T {
   return {
     ...this,
-    _ordersBox: {
-      ...this._ordersBox,
-      _values: [...this._ordersBox._values, ...orderTerm],
+    __state: {
+      ...this.__state,
+      ordersBox: {
+        ...this.__state.ordersBox,
+        __state: {
+          ...this.__state.ordersBox.__state,
+          values: [...this.__state.ordersBox.__state.values, ...orderTerm],
+        },
+      },
     },
   };
 }
@@ -85,9 +103,15 @@ export function orderByForState<T extends IOrderState>(
 export function withoutOrderForState<T extends IOrderState>(this: T): T {
   return {
     ...this,
-    _ordersBox: {
-      ...this._ordersBox,
-      _values: [],
+    __state: {
+      ...this.__state,
+      ordersBox: {
+        ...this.__state.ordersBox,
+        __state: {
+          ...this.__state.ordersBox.__state,
+          values: [],
+        },
+      },
     },
   };
 }

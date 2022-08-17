@@ -42,6 +42,7 @@ import {
   withoutOffset,
 } from "../limitOffset";
 import {
+  IOrdersBoxTerm,
   IOrderState,
   orderBy,
   orderByForState,
@@ -69,6 +70,9 @@ export interface ISelectStatement
     IWhereState,
     IFromState,
     IJoinState {
+  __state: {
+    ordersBox: IOrdersBoxTerm;
+  };
   _distinctValue: boolean;
 
   _selectValues: {
@@ -117,12 +121,14 @@ const selectArgsToValues = (
 export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
   return {
     type: TokenType.Select,
+    __state: {
+      ordersBox: orderBy(),
+    },
     _fromValues: [],
     _selectValues: selectArgsToValues(selectArgs),
     _distinctValue: false,
     _groupByValues: [],
     _compoundValues: [],
-    _ordersBox: orderBy(),
     _joinValues: [],
     _limitOffsetValue: buildInitialLimitOffsetState(),
     select(...selectArgs: ISelectArgType[]): ISelectStatement {
@@ -239,7 +245,7 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
           this._compoundValues.length > 0
             ? sql.join(this._compoundValues, " ")
             : null,
-          this._ordersBox,
+          this.__state.ordersBox,
           this._limitOffsetValue.toSql().isEmpty
             ? null
             : this._limitOffsetValue,

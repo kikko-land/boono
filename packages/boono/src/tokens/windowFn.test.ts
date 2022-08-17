@@ -2,7 +2,7 @@ import { sql } from "@kikko-land/sql";
 import { describe, expect, it } from "vitest";
 
 import { gtEq$, or } from "./binary";
-import { asc, desc } from "./order";
+import { desc } from "./order";
 import { windowBody, windowFn } from "./windowFn";
 
 describe("windowFn", () => {

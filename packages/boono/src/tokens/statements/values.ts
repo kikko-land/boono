@@ -19,6 +19,7 @@ import {
   withoutOffset,
 } from "../limitOffset";
 import {
+  IOrdersBoxTerm,
   IOrderState,
   orderBy,
   orderByForState,
@@ -31,7 +32,10 @@ export interface IValuesStatement
     ICompoundState,
     ILimitOffsetState,
     ICTEState {
-  _values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[][];
+  __state: {
+    ordersBox: IOrdersBoxTerm;
+    values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[][];
+  };
 }
 
 export const values = (
@@ -39,9 +43,11 @@ export const values = (
 ): IValuesStatement => {
   return {
     type: TokenType.Values,
-    _values: vals,
+    __state: {
+      ordersBox: orderBy(),
+      values: vals,
+    },
     _compoundValues: [],
-    _ordersBox: orderBy(),
     _limitOffsetValue: buildInitialLimitOffsetState(),
 
     orderBy: orderByForState,
@@ -66,12 +72,12 @@ export const values = (
         [
           this._cteValue ? this._cteValue : null,
           sql`VALUES ${sql.join(
-            this._values.map((val) => sql`(${sql.join(val)})`)
+            this.__state.values.map((val) => sql`(${sql.join(val)})`)
           )}`,
           this._compoundValues.length > 0
             ? sql.join(this._compoundValues, " ")
             : null,
-          this._ordersBox,
+          this.__state.ordersBox,
           this._limitOffsetValue.toSql().isEmpty
             ? null
             : this._limitOffsetValue,
