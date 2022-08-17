@@ -1,0 +1,26 @@
+{
+  "name": "boono-monorepo",
+  "version": "0.1.0",
+  "author": "Sergey Popov",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "add-changeset": "yarn changeset",
+    "bump-versions": "yarn changeset version",
+    "publish-packages": "yarn turbo run lint && yarn turbo run build && yarn workspace @kikko-land/common-scripts publish-packages",
+    "build": "yarn turbo run build",
+    "lint": "yarn turbo run lint",
+    "check-typing": "yarn turbo run check-typing"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "@changesets/cli": "^2.24.2",
+    "turbo": "^1.4.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
