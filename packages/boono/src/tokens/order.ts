@@ -85,33 +85,37 @@ export function orderByForState<T extends IOrderState>(
   this: T,
   ...orderTerm: IOrderTerm[]
 ): T {
-  return {
-    ...this,
-    __state: {
-      ...this.__state,
-      ordersBox: {
-        ...this.__state.ordersBox,
-        __state: {
-          ...this.__state.ordersBox.__state,
-          values: [...this.__state.ordersBox.__state.values, ...orderTerm],
-        },
+  const state: IOrderState["__state"] = {
+    ...this.__state,
+    ordersBox: {
+      ...this.__state.ordersBox,
+      __state: {
+        ...this.__state.ordersBox.__state,
+        values: [...this.__state.ordersBox.__state.values, ...orderTerm],
       },
     },
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }
 
 export function withoutOrderForState<T extends IOrderState>(this: T): T {
-  return {
-    ...this,
-    __state: {
-      ...this.__state,
-      ordersBox: {
-        ...this.__state.ordersBox,
-        __state: {
-          ...this.__state.ordersBox.__state,
-          values: [],
-        },
+  const state: IOrderState["__state"] = {
+    ...this.__state,
+    ordersBox: {
+      ...this.__state.ordersBox,
+      __state: {
+        ...this.__state.ordersBox.__state,
+        values: [],
       },
     },
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }

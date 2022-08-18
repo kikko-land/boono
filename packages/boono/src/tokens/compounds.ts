@@ -25,44 +25,46 @@ export interface ICompoundState {
 }
 
 const makeCompounds = <T extends ICompoundState>(
-  state: T,
+  term: T,
   type: "UNION" | "UNION ALL" | "INTERSECT" | "EXCEPT",
   values: IUnionArg[]
 ): T => {
-  return {
-    ...state,
-    __state: {
-      ...state.__state,
-      compoundValues: [
-        ...state.__state.compoundValues,
-        ...values.map(
-          (val): ICompoundOperator => {
-            const token = toToken(val);
+  const state: ICompoundState["__state"] = {
+    ...term.__state,
+    compoundValues: [
+      ...term.__state.compoundValues,
+      ...values.map(
+        (val): ICompoundOperator => {
+          const token = toToken(val);
 
-            return {
-              type: TokenType.OrderTerm,
-              compoundType: type,
-              value: isSelect(token)
-                ? token
-                    .withoutWith()
-                    .withoutLimit()
-                    .withoutOrder()
-                    .withoutOffset()
-                : isValues(token)
-                ? token
-                    .withoutWith()
-                    .withoutLimit()
-                    .withoutOrder()
-                    .withoutOffset()
-                : (token as IValuesStatement | IBaseToken<TokenType.RawSql>),
-              toSql() {
-                return sql`${sql.raw(this.compoundType)} ${this.value}`;
-              },
-            };
-          }
-        ),
-      ],
-    },
+          return {
+            type: TokenType.OrderTerm,
+            compoundType: type,
+            value: isSelect(token)
+              ? token
+                  .withoutWith()
+                  .withoutLimit()
+                  .withoutOrder()
+                  .withoutOffset()
+              : isValues(token)
+              ? token
+                  .withoutWith()
+                  .withoutLimit()
+                  .withoutOrder()
+                  .withoutOffset()
+              : (token as IValuesStatement | IBaseToken<TokenType.RawSql>),
+            toSql() {
+              return sql`${sql.raw(this.compoundType)} ${this.value}`;
+            },
+          };
+        }
+      ),
+    ],
+  };
+
+  return {
+    ...term,
+    __state: state,
   };
 };
 
@@ -92,5 +94,10 @@ export function except<T extends ICompoundState>(
 }
 
 export function withoutCompound<T extends ICompoundState>(this: T) {
-  return { ...this, __state: { ...this.__state, compoundValues: [] } };
+  const state: ICompoundState["__state"] = {
+    ...this.__state,
+    compoundValues: [],
+  };
+
+  return { ...this, __state: state };
 }

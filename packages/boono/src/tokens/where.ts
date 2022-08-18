@@ -1,4 +1,4 @@
-import { IBaseToken, TokenType } from "../types";
+import { IBaseToken } from "../types";
 import {
   and,
   conditionValuesToToken,
@@ -9,29 +9,36 @@ import {
 import { IUnaryOperator } from "./unary";
 
 export interface IWhereState {
-  _whereValue?: IBaseToken<TokenType.RawSql> | IBinaryOperator | IUnaryOperator;
+  __state: {
+    whereValue?: IBaseToken | IBinaryOperator | IUnaryOperator;
+  };
 
   where: typeof where;
   orWhere: typeof orWhere;
 }
 
-const constructWhere = function <T extends IWhereState>(
-  state: T,
+const constructWhere = function<T extends IWhereState>(
+  current: T,
   andOrOr: "and" | "or",
   values: IConditionValue[]
 ): T {
-  const finalValues = state._whereValue
-    ? [state._whereValue, ...conditionValuesToToken(values)]
+  const finalValues = current.__state.whereValue
+    ? [current.__state.whereValue, ...conditionValuesToToken(values)]
     : conditionValuesToToken(values);
 
-  if (finalValues.length > 1) {
-    return {
-      ...state,
-      _whereValue: andOrOr === "and" ? and(...finalValues) : or(...finalValues),
-    };
-  } else {
-    return { ...state, _whereValue: finalValues[0] };
-  }
+  const state: IWhereState["__state"] = (() => {
+    if (finalValues.length > 1) {
+      return {
+        ...current.__state,
+        whereValue:
+          andOrOr === "and" ? and(...finalValues) : or(...finalValues),
+      };
+    } else {
+      return { ...current.__state, whereValue: finalValues[0] };
+    }
+  })();
+
+  return { ...current, __state: state };
 };
 
 export function where<T extends IWhereState>(

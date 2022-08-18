@@ -68,8 +68,15 @@ export interface IUpdateStatement
     IReturningState,
     IOrReplaceState,
     IJoinState {
-  _updateTable: IContainsTable;
-  _setValues: ISetValue[];
+  __state: {
+    updateTable: IContainsTable;
+    setValues: ISetValue[];
+  } & IFromState["__state"] &
+    IOrReplaceState["__state"] &
+    IJoinState["__state"] &
+    IReturningState["__state"] &
+    ICTEState["__state"] &
+    IWhereState["__state"];
 
   set(...args: ISetArgType[]): IUpdateStatement;
 }
@@ -89,11 +96,13 @@ type ISetArgType =
 export const update = (tbl: string | IContainsTable): IUpdateStatement => {
   return {
     type: TokenType.Update,
-    _updateTable: typeof tbl === "string" ? sql.table(tbl) : tbl,
-    _setValues: [],
-    _fromValues: [],
-    _joinValues: [],
-    _returningValue: returning(),
+    __state: {
+      updateTable: typeof tbl === "string" ? sql.table(tbl) : tbl,
+      setValues: [],
+      returningValue: returning(),
+      joinValues: [],
+      fromValues: [],
+    },
 
     with: With,
     withoutWith,
@@ -154,21 +163,27 @@ export const update = (tbl: string | IContainsTable): IUpdateStatement => {
         }
       });
 
-      return { ...this, _setValues: [...this._setValues, ...vals] };
+      return {
+        ...this,
+        __state: {
+          ...this.__state,
+          setValues: [...this.__state.setValues, ...vals],
+        },
+      };
     },
 
     toSql() {
       return sql.join(
         [
-          this._cteValue ? this._cteValue : null,
+          this.__state.cteValue ? this.__state.cteValue : null,
           sql`UPDATE`,
-          this._orReplaceValue
-            ? sql`OR ${sql.raw(this._orReplaceValue)}`
+          this.__state.orReplaceValue
+            ? sql`OR ${sql.raw(this.__state.orReplaceValue)}`
             : null,
-          this._updateTable,
+          this.__state.updateTable,
           sql`SET`,
           sql.join(
-            this._setValues.map((val) =>
+            this.__state.setValues.map((val) =>
               isToken(val)
                 ? val
                 : sql`${sql.liter(val.columnName)} = ${wrapParentheses(
@@ -176,18 +191,21 @@ export const update = (tbl: string | IContainsTable): IUpdateStatement => {
                   )}`
             )
           ),
-          this._fromValues.length > 0 || this._joinValues.length > 0
+          this.__state.fromValues.length > 0 ||
+          this.__state.joinValues.length > 0
             ? sql`FROM`
             : null,
           fromToSql(this),
-          this._joinValues.length > 0
+          this.__state.joinValues.length > 0
             ? sql.join(
-                this._joinValues.map((expr) => expr.toSql()),
+                this.__state.joinValues.map((expr) => expr.toSql()),
                 " "
               )
             : null,
-          this._whereValue ? sql`WHERE ${this._whereValue}` : null,
-          this._returningValue,
+          this.__state.whereValue
+            ? sql`WHERE ${this.__state.whereValue}`
+            : null,
+          this.__state.returningValue,
         ].filter((v) => v),
         " "
       );

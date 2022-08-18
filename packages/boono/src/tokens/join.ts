@@ -27,12 +27,14 @@ type IJoinOperator =
     ));
 
 export interface IJoinExpr extends IBaseToken<TokenType.Join> {
-  _operator?: IJoinOperator;
-  _toJoin:
-    | IContainsTable
-    | IBaseToken
-    | { toSelect: IBaseToken; alias: string };
-  _on?: IConditionValue;
+  __state: {
+    operator?: IJoinOperator;
+    toJoin:
+      | IContainsTable
+      | IBaseToken
+      | { toSelect: IBaseToken; alias: string };
+    on?: IConditionValue;
+  };
 }
 
 const baseJoin = (
@@ -42,39 +44,42 @@ const baseJoin = (
 ): IJoinExpr => {
   return {
     type: TokenType.Join,
-    _operator: operator,
-    _toJoin: (() => {
-      if (typeof toJoin === "string") {
-        return sql.table(toJoin);
-      } else if (isTable(toJoin)) {
-        return toJoin;
-      } else if (isToken(toJoin) || sql.isSql(toJoin)) {
-        return toToken(toJoin);
-      } else {
-        const entries = Object.entries(toJoin);
-        if (entries.length === 0) {
-          throw new Error("No alias select present for join");
+    __state: {
+      operator: operator,
+      toJoin: (() => {
+        if (typeof toJoin === "string") {
+          return sql.table(toJoin);
+        } else if (isTable(toJoin)) {
+          return toJoin;
+        } else if (isToken(toJoin) || sql.isSql(toJoin)) {
+          return toToken(toJoin);
+        } else {
+          const entries = Object.entries(toJoin);
+          if (entries.length === 0) {
+            throw new Error("No alias select present for join");
+          }
+          if (entries.length > 1) {
+            throw new Error("Only one select could be specified at join");
+          }
+          return { toSelect: toToken(entries[0][1]), alias: entries[0][0] };
         }
-        if (entries.length > 1) {
-          throw new Error("Only one select could be specified at join");
-        }
-        return { toSelect: toToken(entries[0][1]), alias: entries[0][0] };
-      }
-    })(),
-    _on: on,
+      })(),
+      on: on,
+    },
 
     toSql() {
       const operatorSql = (() => {
-        if (!this._operator) return [sql`JOIN`];
+        if (!this.__state.operator) return [sql`JOIN`];
 
-        if ("joinType" in this._operator) {
-          if (this._operator.joinType === "CROSS") {
+        if ("joinType" in this.__state.operator) {
+          if (this.__state.operator.joinType === "CROSS") {
             return [sql`CROSS JOIN`] as const;
           } else {
             return [
-              this._operator.isNatural ? sql`NATURAL` : undefined,
-              sql.raw(this._operator.joinType),
-              "isOuter" in this._operator && this._operator.isOuter
+              this.__state.operator.isNatural ? sql`NATURAL` : undefined,
+              sql.raw(this.__state.operator.joinType),
+              "isOuter" in this.__state.operator &&
+              this.__state.operator.isOuter
                 ? sql`OUTER`
                 : undefined,
               sql`JOIN`,
@@ -82,7 +87,7 @@ const baseJoin = (
           }
         } else {
           return [
-            this._operator.isNatural ? sql`NATURAL` : undefined,
+            this.__state.operator.isNatural ? sql`NATURAL` : undefined,
             sql`JOIN`,
           ] as const;
         }
@@ -91,10 +96,12 @@ const baseJoin = (
       return sql.join(
         [
           ...operatorSql,
-          "toSelect" in this._toJoin
-            ? alias(this._toJoin.toSelect, this._toJoin.alias)
-            : wrapParentheses(this._toJoin),
-          ...(this._on ? [sql`ON`, ...conditionValuesToToken([this._on])] : []),
+          "toSelect" in this.__state.toJoin
+            ? alias(this.__state.toJoin.toSelect, this.__state.toJoin.alias)
+            : wrapParentheses(this.__state.toJoin),
+          ...(this.__state.on
+            ? [sql`ON`, ...conditionValuesToToken([this.__state.on])]
+            : []),
         ],
         " "
       );
@@ -102,7 +109,7 @@ const baseJoin = (
   };
 };
 
-type IToJoinArg =
+export type IToJoinArg =
   | IBaseToken
   | ISqlAdapter
   | IContainsTable
@@ -110,11 +117,14 @@ type IToJoinArg =
   | { [key: string]: ISqlAdapter | ISelectStatement | string };
 
 export interface IJoinState {
-  _joinValues: IJoinExpr[];
+  __state: {
+    joinValues: IJoinExpr[];
+  };
+
+  join: typeof join;
 
   withoutJoin: typeof withoutJoin;
 
-  join: typeof join;
   joinCross: typeof joinCross;
 
   joinNatural: typeof joinNatural;
@@ -143,37 +153,49 @@ export function join<T extends IJoinState>(
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [...this._joinValues, baseJoin(undefined, toJoin, on)],
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [...this.__state.joinValues, baseJoin(undefined, toJoin, on)],
   };
+
+  return { ...this, __state: state };
 }
 
 export function joinCross<T extends IJoinState>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
-): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+) {
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
       baseJoin({ joinType: "CROSS" }, toJoin, on),
     ],
   };
-}
 
-export function joinNatural<T extends IJoinState>(
-  this: T,
-  toJoin: IToJoinArg,
-  on?: IConditionValue
-): T {
   return {
     ...this,
-    _joinValues: [
-      ...this._joinValues,
+    __state: state,
+  };
+}
+
+export function joinNatural(
+  this: IJoinState,
+  toJoin: IToJoinArg,
+  on?: IConditionValue
+): IJoinState {
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
       baseJoin({ isNatural: true }, toJoin, on),
     ],
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }
 
@@ -182,16 +204,21 @@ export function joinLeftNatural<T extends IJoinState>(
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
       baseJoin(
         { isNatural: true, isOuter: false, joinType: "LEFT" as const },
         toJoin,
         on
       ),
     ],
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }
 
@@ -200,16 +227,21 @@ export function joinRightNatural<T extends IJoinState>(
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
       baseJoin(
         { isNatural: true, isOuter: false, joinType: "RIGHT" as const },
         toJoin,
         on
       ),
     ],
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }
 
@@ -218,16 +250,21 @@ export function joinFullNatural<T extends IJoinState>(
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
       baseJoin(
         { isNatural: true, isOuter: false, joinType: "FULL" as const },
         toJoin,
         on
       ),
     ],
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }
 
@@ -236,10 +273,10 @@ export function joinLeftNaturalOuter<T extends IJoinState>(
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
       baseJoin(
         { isNatural: true, isOuter: true, joinType: "LEFT" as const },
         toJoin,
@@ -247,16 +284,21 @@ export function joinLeftNaturalOuter<T extends IJoinState>(
       ),
     ],
   };
+
+  return {
+    ...this,
+    __state: state,
+  };
 }
 export function joinRightNaturalOuter<T extends IJoinState>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
       baseJoin(
         { isNatural: true, isOuter: true, joinType: "RIGHT" as const },
         toJoin,
@@ -264,22 +306,32 @@ export function joinRightNaturalOuter<T extends IJoinState>(
       ),
     ],
   };
+
+  return {
+    ...this,
+    __state: state,
+  };
 }
 export function joinFullNaturalOuter<T extends IJoinState>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
       baseJoin(
         { isNatural: true, isOuter: true, joinType: "FULL" as const },
         toJoin,
         on
       ),
     ],
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }
 
@@ -288,12 +340,17 @@ export function joinInnerNatural<T extends IJoinState>(
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
       baseJoin({ isNatural: true, joinType: "INNER" as const }, toJoin, on),
     ],
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }
 
@@ -302,12 +359,18 @@ export function joinLeft<T extends IJoinState>(
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
+
       baseJoin({ isNatural: false, joinType: "LEFT" as const }, toJoin, on),
     ],
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }
 export function joinRight<T extends IJoinState>(
@@ -315,12 +378,18 @@ export function joinRight<T extends IJoinState>(
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
+
       baseJoin({ isNatural: false, joinType: "RIGHT" as const }, toJoin, on),
     ],
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }
 export function joinFull<T extends IJoinState>(
@@ -328,12 +397,17 @@ export function joinFull<T extends IJoinState>(
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
       baseJoin({ isNatural: false, joinType: "FULL" as const }, toJoin, on),
     ],
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }
 
@@ -342,10 +416,11 @@ export function joinLeftOuter<T extends IJoinState>(
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
+
       baseJoin(
         { isNatural: false, isOuter: true, joinType: "LEFT" as const },
         toJoin,
@@ -353,16 +428,22 @@ export function joinLeftOuter<T extends IJoinState>(
       ),
     ],
   };
+
+  return {
+    ...this,
+    __state: state,
+  };
 }
 export function joinRightOuter<T extends IJoinState>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
+
       baseJoin(
         { isNatural: false, isOuter: true, joinType: "RIGHT" as const },
         toJoin,
@@ -370,22 +451,33 @@ export function joinRightOuter<T extends IJoinState>(
       ),
     ],
   };
+
+  return {
+    ...this,
+    __state: state,
+  };
 }
 export function joinFullOuter<T extends IJoinState>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  return {
-    ...this,
-    _joinValues: [
-      ...this._joinValues,
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
+
       baseJoin(
         { isNatural: false, isOuter: true, joinType: "FULL" as const },
         toJoin,
         on
       ),
     ],
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }
 
@@ -394,19 +486,28 @@ export function joinInner<T extends IJoinState>(
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [
+      ...this.__state.joinValues,
+      baseJoin({ isNatural: false, joinType: "INNER" as const }, toJoin, on),
+    ],
+  };
+
   return {
     ...this,
-    _joinValues: [
-      ...this._joinValues,
-      baseJoin({ isNatural: false, joinType: "INNER" as const }, toJoin),
-      on,
-    ],
+    __state: state,
   };
 }
 
 export function withoutJoin<T extends IJoinState>(this: T): T {
+  const state: IJoinState["__state"] = {
+    ...this.__state,
+    joinValues: [],
+  };
+
   return {
     ...this,
-    _joinValues: [],
+    __state: state,
   };
 }

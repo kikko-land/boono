@@ -6,7 +6,7 @@ import {
 } from "@kikko-land/sql";
 
 import { IBaseToken, isToken, TokenType } from "../../types";
-import { ICTEState, With, withoutWith, withRecursive } from "../cte";
+import { ICTEState, ICTETerm, With, withoutWith, withRecursive } from "../cte";
 import {
   IOrReplaceState,
   orAbort,
@@ -31,13 +31,17 @@ export interface IInsertStatement
     ICTEState,
     IReturningState,
     IOrReplaceState {
-  _intoTable?: IContainsTable;
-  _columnNames: string[];
+  __state: {
+    intoTable?: string | IContainsTable;
+    columnNames: string[];
 
-  _toInsertValue?:
-    | IValuesStatement
-    | ISelectStatement
-    | { columnName: string; value: IPrimitiveValue | IBaseToken }[][];
+    toInsertValue?:
+      | IValuesStatement
+      | ISelectStatement
+      | { columnName: string; value: IPrimitiveValue | IBaseToken }[][];
+  } & ICTEState["__state"] &
+    IReturningState["__state"] &
+    IOrReplaceState["__state"];
 
   setColumnNames(columnNames: string[]): IInsertStatement;
   withoutColumnNames(): IInsertStatement;
@@ -70,35 +74,41 @@ const applyInsertArg = (
   arg: IInsertArg
 ): IInsertStatement => {
   if (
-    state._toInsertValue &&
-    (isSelect(state._toInsertValue) || isValues(state._toInsertValue))
+    state.__state.toInsertValue &&
+    (isSelect(state.__state.toInsertValue) ||
+      isValues(state.__state.toInsertValue))
   ) {
     throw new Error(
-      "Insert value is already state. If you want to change insert values user resetInsert() before."
+      "Insert value is already set. If you want to change insert values user resetInsert() before."
     );
   }
 
   if (isSelect(arg) || isValues(arg)) {
-    return { ...state, _toInsertValue: arg };
+    return { ...state, __state: { ...state.__state, toInsertValue: arg } };
   }
 
   return {
     ...state,
-    _toInsertValue: Array.isArray(state._toInsertValue)
-      ? [...state._toInsertValue, ...mapRecordArg(arg)]
-      : mapRecordArg(arg),
+    __state: {
+      ...state.__state,
+      toInsertValue: Array.isArray(state.__state.toInsertValue)
+        ? [...state.__state.toInsertValue, ...mapRecordArg(arg)]
+        : mapRecordArg(arg),
+    },
   };
 };
 
 export const insert = (insertArg: IInsertArg): IInsertStatement => {
   return {
     type: TokenType.Insert,
-    _returningValue: returning(),
-    _columnNames: [],
-    _toInsertValue:
-      isSelect(insertArg) || isValues(insertArg)
-        ? insertArg
-        : mapRecordArg(insertArg),
+    __state: {
+      returningValue: returning(),
+      columnNames: [],
+      toInsertValue:
+        isSelect(insertArg) || isValues(insertArg)
+          ? insertArg
+          : mapRecordArg(insertArg),
+    },
 
     with: With,
     withRecursive,
@@ -114,61 +124,70 @@ export const insert = (insertArg: IInsertArg): IInsertStatement => {
     withoutReturning: withoutReturningForState,
 
     setColumnNames(names: string[]): IInsertStatement {
-      return { ...this, _columnNames: names };
+      return { ...this, __state: { ...this.__state, columnNames: names } };
     },
     withoutColumnNames(): IInsertStatement {
-      return { ...this, _columnNames: [] };
+      return { ...this, __state: { ...this.__state, columnNames: [] } };
     },
 
     insert(arg: IInsertArg): IInsertStatement {
       return applyInsertArg(this, arg);
     },
     withoutInsert(): IInsertStatement {
-      return { ...this, _toInsertValue: undefined };
+      return {
+        ...this,
+        __state: { ...this.__state, toInsertValue: undefined },
+      };
     },
 
     into(val: string | IContainsTable): IInsertStatement {
       return {
         ...this,
-        _intoTable: typeof val === "string" ? sql.table(val) : val,
+        __state: {
+          ...this.__state,
+          intoTable: typeof val === "string" ? sql.table(val) : val,
+        },
       };
     },
     withoutInto(): IInsertStatement {
-      return { ...this, _intoTable: undefined };
+      return { ...this, __state: { ...this.__state, intoTable: undefined } };
     },
 
     toSql() {
-      if (!this._toInsertValue) {
+      if (!this.__state.toInsertValue) {
         throw new Error("Insert values are not set");
       }
 
-      if (!this._intoTable) {
+      if (!this.__state.intoTable) {
         throw new Error("Into table is not set");
       }
 
       const columns =
-        this._columnNames.length > 0
-          ? this._columnNames
-          : Array.isArray(this._toInsertValue)
-          ? this._toInsertValue[0].map(({ columnName }) => columnName)
+        this.__state.columnNames.length > 0
+          ? this.__state.columnNames
+          : Array.isArray(this.__state.toInsertValue)
+          ? this.__state.toInsertValue[0].map(({ columnName }) => columnName)
           : [];
 
       return sql.join(
         [
-          this._cteValue ? this._cteValue : null,
+          this.__state.cteValue ? this.__state.cteValue : null,
           sql`INSERT`,
-          this._orReplaceValue
-            ? sql`OR ${sql.raw(this._orReplaceValue)}`
+          this.__state.orReplaceValue
+            ? sql`OR ${sql.raw(this.__state.orReplaceValue)}`
             : null,
           sql`INTO`,
-          this._intoTable,
+          typeof this.__state.intoTable === "string"
+            ? sql.table(this.__state.intoTable)
+            : this.__state.intoTable,
           columns.length > 0
             ? sql`(${sql.join(columns.map((c) => sql.liter(c)))})`
             : null,
-          isValues(this._toInsertValue) || isSelect(this._toInsertValue)
-            ? this._toInsertValue
+          isValues(this.__state.toInsertValue) ||
+          isSelect(this.__state.toInsertValue)
+            ? this.__state.toInsertValue
             : sql`VALUES ${sql.join(
-                this._toInsertValue.map((toInsertColumns) => {
+                this.__state.toInsertValue.map((toInsertColumns) => {
                   const toInsert: (IPrimitiveValue | IBaseToken)[] = Array(
                     toInsertColumns.length
                   );
@@ -190,7 +209,7 @@ export const insert = (insertArg: IInsertArg): IInsertStatement => {
                   return sql`(${sql.join(toInsert)})`;
                 })
               )}`,
-          this._returningValue,
+          this.__state.returningValue,
         ].filter((v) => v),
         " "
       );

@@ -3,19 +3,23 @@ import { IPrimitiveValue, ISqlAdapter, sql } from "@kikko-land/sql";
 import { IBaseToken, TokenType } from "../types";
 
 export interface IUnaryOperator extends IBaseToken<TokenType.Unary> {
-  _operator: "NOT";
-  _expr: IBaseToken | ISqlAdapter | IPrimitiveValue;
+  __state: {
+    operator: "NOT";
+    expr: IBaseToken | ISqlAdapter | IPrimitiveValue;
+  };
 }
 
 export const not = (
   expr: IBaseToken | ISqlAdapter | IPrimitiveValue
 ): IUnaryOperator => {
   return {
-    _operator: "NOT",
+    __state: {
+      operator: "NOT",
+      expr: expr,
+    },
     type: TokenType.Unary,
-    _expr: expr,
     toSql() {
-      return sql`NOT (${this._expr})`;
+      return sql`NOT (${this.__state.expr})`;
     },
   };
 };

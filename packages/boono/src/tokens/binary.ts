@@ -7,30 +7,32 @@ import { wrapParentheses } from "./utils";
 // TODO: in null support
 // TODO: add ESCAPE for LIKE/NOT LIKE
 export interface IBinaryOperator extends IBaseToken<TokenType.Binary> {
-  _operator:
-    | "<"
-    | "<="
-    | ">"
-    | ">="
-    | "="
-    | "<>"
-    | "AND"
-    | "OR"
-    | "IN"
-    | "NOT IN"
-    | "LIKE"
-    | "NOT LIKE"
-    // TODO: add all
-    | "BETWEEN"
-    | "NOT BETWEEN"
-    | "GLOB"
-    | "NOT GLOB"
-    | "MATCH"
-    | "NOT MATCH"
-    | "REGEXP"
-    | "NOT REGEXP";
-  _left: IBaseToken;
-  _right: IBaseToken | IBaseToken[];
+  __state: {
+    operator:
+      | "<"
+      | "<="
+      | ">"
+      | ">="
+      | "="
+      | "<>"
+      | "AND"
+      | "OR"
+      | "IN"
+      | "NOT IN"
+      | "LIKE"
+      | "NOT LIKE"
+      // TODO: add all
+      | "BETWEEN"
+      | "NOT BETWEEN"
+      | "GLOB"
+      | "NOT GLOB"
+      | "MATCH"
+      | "NOT MATCH"
+      | "REGEXP"
+      | "NOT REGEXP";
+    left: IBaseToken;
+    right: IBaseToken | IBaseToken[];
+  };
 }
 
 export const isBinaryOperator = (t: unknown): t is IBinaryOperator => {
@@ -43,7 +45,7 @@ export const isBinaryOperator = (t: unknown): t is IBinaryOperator => {
 };
 
 const binaryOperator = (
-  operator: IBinaryOperator["_operator"],
+  operator: IBinaryOperator["__state"]["operator"],
   left: IBaseToken | ISqlAdapter | IPrimitiveValue,
   right:
     | IBaseToken
@@ -53,14 +55,18 @@ const binaryOperator = (
 ): IBinaryOperator => {
   return {
     type: TokenType.Binary,
-    _left: toToken(left),
-    _right: Array.isArray(right) ? right.map(toToken) : toToken(right),
-    _operator: operator,
+    __state: {
+      left: toToken(left),
+      right: Array.isArray(right) ? right.map(toToken) : toToken(right),
+      operator: operator,
+    },
     toSql() {
-      return sql`${wrapParentheses(this._left)} ${sql.raw(this._operator)} ${
-        Array.isArray(this._right)
-          ? sql`(${sql.join(this._right)})`
-          : wrapParentheses(this._right)
+      return sql`${wrapParentheses(this.__state.left)} ${sql.raw(
+        this.__state.operator
+      )} ${
+        Array.isArray(this.__state.right)
+          ? sql`(${sql.join(this.__state.right)})`
+          : wrapParentheses(this.__state.right)
       }`;
     },
   };
@@ -164,16 +170,16 @@ export const notIn = (
   return binaryOperator("NOT IN", left, right);
 };
 
-export const in$ =
-  (...values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[]) =>
-  (left: IBaseToken | ISqlAdapter | IPrimitiveValue) => {
-    return In(left, ...values);
-  };
-export const notIn$ =
-  (...values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[]) =>
-  (left: IBaseToken | ISqlAdapter | IPrimitiveValue) => {
-    return notIn(left, ...values);
-  };
+export const in$ = (
+  ...values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[]
+) => (left: IBaseToken | ISqlAdapter | IPrimitiveValue) => {
+  return In(left, ...values);
+};
+export const notIn$ = (
+  ...values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[]
+) => (left: IBaseToken | ISqlAdapter | IPrimitiveValue) => {
+  return notIn(left, ...values);
+};
 
 export type IConditionValue =
   | IBaseToken

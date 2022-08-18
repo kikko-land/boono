@@ -3,7 +3,6 @@ import { IPrimitiveValue, ISqlAdapter, sql } from "@kikko-land/sql";
 import { IBaseToken, TokenType } from "../../types";
 import {
   except,
-  ICompoundOperator,
   ICompoundState,
   intersect,
   union,
@@ -20,7 +19,6 @@ import {
   withoutOffset,
 } from "../limitOffset";
 import {
-  IOrdersBoxTerm,
   IOrderState,
   orderBy,
   orderByForState,
@@ -34,10 +32,11 @@ export interface IValuesStatement
     ILimitOffsetState,
     ICTEState {
   __state: {
-    compoundValues: ICompoundOperator[];
-    ordersBox: IOrdersBoxTerm;
     values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[][];
-  };
+  } & IOrderState["__state"] &
+    ICompoundState["__state"] &
+    ILimitOffsetState["__state"] &
+    ICTEState["__state"];
 }
 
 export const values = (
@@ -49,8 +48,8 @@ export const values = (
       compoundValues: [],
       ordersBox: orderBy(),
       values: vals,
+      limitOffsetValue: buildInitialLimitOffsetState(),
     },
-    _limitOffsetValue: buildInitialLimitOffsetState(),
 
     orderBy: orderByForState,
     withoutOrder: withoutOrderForState,
@@ -72,7 +71,7 @@ export const values = (
     toSql() {
       return sql.join(
         [
-          this._cteValue ? this._cteValue : null,
+          this.__state.cteValue ? this.__state.cteValue : null,
           sql`VALUES ${sql.join(
             this.__state.values.map((val) => sql`(${sql.join(val)})`)
           )}`,
@@ -80,9 +79,9 @@ export const values = (
             ? sql.join(this.__state.compoundValues, " ")
             : null,
           this.__state.ordersBox,
-          this._limitOffsetValue.toSql().isEmpty
+          this.__state.limitOffsetValue.toSql().isEmpty
             ? null
-            : this._limitOffsetValue,
+            : this.__state.limitOffsetValue,
         ].filter((v) => v),
         " "
       );
