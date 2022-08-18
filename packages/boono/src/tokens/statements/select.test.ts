@@ -42,4 +42,22 @@ describe("select", () => {
       `SELECT group_concat(a, '.') OVER (func PARTITION BY "kek", "puk" ORDER BY "kek" DESC) AS "a", group_concat(b, '.') OVER (), group_concat(c, '.') OVER () AS "test" FROM "notes"`
     );
   });
+
+  it("allows to define window function", () => {
+    expect(
+      select("a")
+        .defineWindow(
+          "kek",
+          windowBody()
+            .partitionBy("kek")
+            .partitionBy("puk")
+            .orderBy(desc("kek"))
+        )
+        .defineWindow("pog", windowBody().partitionBy("wow"))
+        .from("notes")
+        .toSql().raw
+    ).to.eq(
+      `SELECT "a" FROM "notes" WINDOW kek AS (PARTITION BY "kek", "puk" ORDER BY "kek" DESC), pog AS (PARTITION BY "wow")`
+    );
+  });
 });

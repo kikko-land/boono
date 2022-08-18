@@ -60,7 +60,6 @@ export const isSelect = (val: unknown): val is ISelectStatement => {
   );
 };
 
-// TODO: add filter, window support
 export interface ISelectStatement
   extends IBaseToken<TokenType.Select>,
     IOrderState,
@@ -72,6 +71,10 @@ export interface ISelectStatement
     IJoinState {
   __state: {
     ordersBox: IOrdersBoxTerm;
+    definedWindowFunctions: {
+      name: string;
+      windowBody: IBaseToken<TokenType.WindowBody>;
+    }[];
   };
   _distinctValue: boolean;
 
@@ -82,6 +85,12 @@ export interface ISelectStatement
 
   _groupByValues: (IBaseToken | string)[];
   _havingValue?: IBaseToken;
+
+  defineWindow(
+    name: string,
+    body: IBaseToken<TokenType.WindowBody>
+  ): ISelectStatement;
+  withoutDefinedWindows(): ISelectStatement;
 
   distinct(val: boolean): ISelectStatement;
   select(...args: ISelectArgType[]): ISelectStatement;
@@ -123,6 +132,7 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
     type: TokenType.Select,
     __state: {
       ordersBox: orderBy(),
+      definedWindowFunctions: [],
     },
     _fromValues: [],
     _selectValues: selectArgsToValues(selectArgs),
@@ -166,6 +176,31 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
     },
     orderBy: orderByForState,
     withoutOrder: withoutOrderForState,
+
+    defineWindow(name: string, body: IBaseToken<TokenType.WindowBody>) {
+      return {
+        ...this,
+        __state: {
+          ...this.__state,
+          definedWindowFunctions: [
+            ...this.__state.definedWindowFunctions,
+            {
+              name: name,
+              windowBody: body,
+            },
+          ],
+        },
+      };
+    },
+    withoutDefinedWindows() {
+      return {
+        ...this,
+        __state: {
+          ...this.__state,
+          definedWindowFunctions: [],
+        },
+      };
+    },
 
     with: With,
     withoutWith,
@@ -242,6 +277,18 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
           this._groupByValues.length > 0 && this._havingValue
             ? sql`HAVING ${this._havingValue}`
             : null,
+          ...(this.__state.definedWindowFunctions.length > 0
+            ? [
+                sql`WINDOW`,
+                sql.join(
+                  this.__state.definedWindowFunctions.map(
+                    ({ name, windowBody }) =>
+                      sql`${sql.strip(name)} AS (${windowBody})`
+                  ),
+                  ", "
+                ),
+              ]
+            : []),
           this._compoundValues.length > 0
             ? sql.join(this._compoundValues, " ")
             : null,
