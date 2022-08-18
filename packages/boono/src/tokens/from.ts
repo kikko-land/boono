@@ -28,7 +28,8 @@ export function from<T extends IFromState>(
   )[]
 ): T {
   const state: IFromState["__state"] = {
-    fromValues: {
+    ...this.__state,
+    fromValues: [
       ...this.__state.fromValues,
       ...values
         .map((v) => {
@@ -47,7 +48,7 @@ export function from<T extends IFromState>(
           }
         })
         .flat(),
-    },
+    ],
   };
 
   return {

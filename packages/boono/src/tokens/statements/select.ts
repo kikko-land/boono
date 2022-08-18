@@ -264,7 +264,7 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
             this.__state.selectValues.map((val) => {
               if (val.toSelect === "*") {
                 return sql`*`;
-              } else if (typeof val.toSelect === "string") {
+              } else if (typeof val.toSelect === "string" && !val.alias) {
                 return sql.liter(val.toSelect);
               } else {
                 return val.alias
