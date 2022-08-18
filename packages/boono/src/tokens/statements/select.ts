@@ -4,6 +4,7 @@ import { IBaseToken, isToken, TokenType } from "../../types";
 import { alias } from "../alias";
 import {
   except,
+  ICompoundOperator,
   ICompoundState,
   intersect,
   union,
@@ -70,6 +71,7 @@ export interface ISelectStatement
     IFromState,
     IJoinState {
   __state: {
+    compoundValues: ICompoundOperator[];
     ordersBox: IOrdersBoxTerm;
     definedWindowFunctions: {
       name: string;
@@ -131,6 +133,7 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
   return {
     type: TokenType.Select,
     __state: {
+      compoundValues: [],
       ordersBox: orderBy(),
       definedWindowFunctions: [],
     },
@@ -138,7 +141,6 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
     _selectValues: selectArgsToValues(selectArgs),
     _distinctValue: false,
     _groupByValues: [],
-    _compoundValues: [],
     _joinValues: [],
     _limitOffsetValue: buildInitialLimitOffsetState(),
     select(...selectArgs: ISelectArgType[]): ISelectStatement {
@@ -289,8 +291,8 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
                 ),
               ]
             : []),
-          this._compoundValues.length > 0
-            ? sql.join(this._compoundValues, " ")
+          this.__state.compoundValues.length > 0
+            ? sql.join(this.__state.compoundValues, " ")
             : null,
           this.__state.ordersBox,
           this._limitOffsetValue.toSql().isEmpty

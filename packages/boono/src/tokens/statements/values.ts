@@ -3,6 +3,7 @@ import { IPrimitiveValue, ISqlAdapter, sql } from "@kikko-land/sql";
 import { IBaseToken, TokenType } from "../../types";
 import {
   except,
+  ICompoundOperator,
   ICompoundState,
   intersect,
   union,
@@ -33,6 +34,7 @@ export interface IValuesStatement
     ILimitOffsetState,
     ICTEState {
   __state: {
+    compoundValues: ICompoundOperator[];
     ordersBox: IOrdersBoxTerm;
     values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[][];
   };
@@ -44,10 +46,10 @@ export const values = (
   return {
     type: TokenType.Values,
     __state: {
+      compoundValues: [],
       ordersBox: orderBy(),
       values: vals,
     },
-    _compoundValues: [],
     _limitOffsetValue: buildInitialLimitOffsetState(),
 
     orderBy: orderByForState,
@@ -74,8 +76,8 @@ export const values = (
           sql`VALUES ${sql.join(
             this.__state.values.map((val) => sql`(${sql.join(val)})`)
           )}`,
-          this._compoundValues.length > 0
-            ? sql.join(this._compoundValues, " ")
+          this.__state.compoundValues.length > 0
+            ? sql.join(this.__state.compoundValues, " ")
             : null,
           this.__state.ordersBox,
           this._limitOffsetValue.toSql().isEmpty
