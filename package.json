@@ -10,6 +10,7 @@
     "publish-packages": "yarn turbo run lint && yarn turbo run build && yarn workspace @kikko-land/common-scripts publish-packages",
     "build": "yarn turbo run build",
     "lint": "yarn turbo run lint",
+    "test": "yarn turbo run test",
     "check-typing": "yarn turbo run check-typing"
   },
   "workspaces": [

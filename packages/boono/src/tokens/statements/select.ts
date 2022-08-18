@@ -41,7 +41,13 @@ import {
   withoutLimit,
   withoutOffset,
 } from "../limitOffset";
-import { IOrderState, orderBy, withoutOrder } from "../order";
+import {
+  IOrdersBoxTerm,
+  IOrderState,
+  orderBy,
+  orderByForState,
+  withoutOrderForState,
+} from "../order";
 import { toToken } from "../rawSql";
 import { IWhereState, orWhere, where } from "../where";
 import { IValuesStatement } from "./values";
@@ -54,7 +60,6 @@ export const isSelect = (val: unknown): val is ISelectStatement => {
   );
 };
 
-// TODO: add filter, window support
 export interface ISelectStatement
   extends IBaseToken<TokenType.Select>,
     IOrderState,
@@ -64,6 +69,13 @@ export interface ISelectStatement
     IWhereState,
     IFromState,
     IJoinState {
+  __state: {
+    ordersBox: IOrdersBoxTerm;
+    definedWindowFunctions: {
+      name: string;
+      windowBody: IBaseToken<TokenType.WindowBody>;
+    }[];
+  };
   _distinctValue: boolean;
 
   _selectValues: {
@@ -73,6 +85,12 @@ export interface ISelectStatement
 
   _groupByValues: (IBaseToken | string)[];
   _havingValue?: IBaseToken;
+
+  defineWindow(
+    name: string,
+    body: IBaseToken<TokenType.WindowBody>
+  ): ISelectStatement;
+  withoutDefinedWindows(): ISelectStatement;
 
   distinct(val: boolean): ISelectStatement;
   select(...args: ISelectArgType[]): ISelectStatement;
@@ -112,12 +130,15 @@ const selectArgsToValues = (
 export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
   return {
     type: TokenType.Select,
+    __state: {
+      ordersBox: orderBy(),
+      definedWindowFunctions: [],
+    },
     _fromValues: [],
     _selectValues: selectArgsToValues(selectArgs),
     _distinctValue: false,
     _groupByValues: [],
     _compoundValues: [],
-    _orderByValues: [],
     _joinValues: [],
     _limitOffsetValue: buildInitialLimitOffsetState(),
     select(...selectArgs: ISelectArgType[]): ISelectStatement {
@@ -153,8 +174,33 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
     having(val: IBaseToken | ISql): ISelectStatement {
       return { ...this, _havingValue: toToken(val) };
     },
-    orderBy,
-    withoutOrder,
+    orderBy: orderByForState,
+    withoutOrder: withoutOrderForState,
+
+    defineWindow(name: string, body: IBaseToken<TokenType.WindowBody>) {
+      return {
+        ...this,
+        __state: {
+          ...this.__state,
+          definedWindowFunctions: [
+            ...this.__state.definedWindowFunctions,
+            {
+              name: name,
+              windowBody: body,
+            },
+          ],
+        },
+      };
+    },
+    withoutDefinedWindows() {
+      return {
+        ...this,
+        __state: {
+          ...this.__state,
+          definedWindowFunctions: [],
+        },
+      };
+    },
 
     with: With,
     withoutWith,
@@ -231,12 +277,22 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
           this._groupByValues.length > 0 && this._havingValue
             ? sql`HAVING ${this._havingValue}`
             : null,
+          ...(this.__state.definedWindowFunctions.length > 0
+            ? [
+                sql`WINDOW`,
+                sql.join(
+                  this.__state.definedWindowFunctions.map(
+                    ({ name, windowBody }) =>
+                      sql`${sql.strip(name)} AS (${windowBody})`
+                  ),
+                  ", "
+                ),
+              ]
+            : []),
           this._compoundValues.length > 0
             ? sql.join(this._compoundValues, " ")
             : null,
-          this._orderByValues.length > 0
-            ? sql.join([sql`ORDER BY`, sql.join(this._orderByValues)], " ")
-            : null,
+          this.__state.ordersBox,
           this._limitOffsetValue.toSql().isEmpty
             ? null
             : this._limitOffsetValue,

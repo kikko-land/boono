@@ -18,7 +18,13 @@ import {
   withoutLimit,
   withoutOffset,
 } from "../limitOffset";
-import { IOrderState, orderBy, withoutOrder } from "../order";
+import {
+  IOrdersBoxTerm,
+  IOrderState,
+  orderBy,
+  orderByForState,
+  withoutOrderForState,
+} from "../order";
 
 export interface IValuesStatement
   extends IBaseToken<TokenType.Values>,
@@ -26,7 +32,10 @@ export interface IValuesStatement
     ICompoundState,
     ILimitOffsetState,
     ICTEState {
-  _values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[][];
+  __state: {
+    ordersBox: IOrdersBoxTerm;
+    values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[][];
+  };
 }
 
 export const values = (
@@ -34,13 +43,15 @@ export const values = (
 ): IValuesStatement => {
   return {
     type: TokenType.Values,
-    _values: vals,
+    __state: {
+      ordersBox: orderBy(),
+      values: vals,
+    },
     _compoundValues: [],
-    _orderByValues: [],
     _limitOffsetValue: buildInitialLimitOffsetState(),
 
-    orderBy,
-    withoutOrder,
+    orderBy: orderByForState,
+    withoutOrder: withoutOrderForState,
 
     union,
     unionAll,
@@ -61,14 +72,12 @@ export const values = (
         [
           this._cteValue ? this._cteValue : null,
           sql`VALUES ${sql.join(
-            this._values.map((val) => sql`(${sql.join(val)})`)
+            this.__state.values.map((val) => sql`(${sql.join(val)})`)
           )}`,
           this._compoundValues.length > 0
             ? sql.join(this._compoundValues, " ")
             : null,
-          this._orderByValues.length > 0
-            ? sql.join([sql`ORDER BY`, sql.join(this._orderByValues)], " ")
-            : null,
+          this.__state.ordersBox,
           this._limitOffsetValue.toSql().isEmpty
             ? null
             : this._limitOffsetValue,

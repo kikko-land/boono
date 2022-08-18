@@ -3,6 +3,7 @@
   "version": "0.1.1",
   "author": "Sergey Popov",
   "license": "MIT",
+  "homepage": "https://boono.netlify.app",
   "exports": {
     ".": {
       "types": "./dist/boono/src/index.d.ts",
@@ -18,12 +19,14 @@
   "scripts": {
     "build": "yarn vite build",
     "lint": "eslint \"src/**/*.{tsx,ts}\" --max-warnings=0",
-    "check-typing": "tsc --noEmit"
+    "check-typing": "tsc --noEmit",
+    "test": "vitest"
   },
   "dependencies": {
     "@kikko-land/sql": "^0.1.1"
   },
   "devDependencies": {
-    "@kikko-land/common-scripts": "^0.1.1"
+    "@kikko-land/common-scripts": "^0.1.1",
+    "vitest": "^0.22.0"
   }
 }

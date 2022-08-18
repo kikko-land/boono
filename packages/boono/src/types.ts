@@ -11,12 +11,15 @@ export enum TokenType {
   Insert = "Insert",
   Values = "Values",
   OrderTerm = "OrderTerm",
+  OrdersBoxTerm = "OrdersBoxTerm",
   LimitOffsetTerm = "LimitOffsetTerm",
   RawSql = "RawSql",
   CompoundOperator = "CompoundOperator",
   CTE = "CTE",
   Join = "Join",
   Returning = "Returning",
+  WindowFn = "WindowFn",
+  WindowBody = "WindowBody",
 }
 
 export interface IBaseToken<T extends TokenType = TokenType> {
