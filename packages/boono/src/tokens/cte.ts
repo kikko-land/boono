@@ -19,7 +19,7 @@ export interface ICTETerm extends IBaseToken<TokenType.CTE> {
   };
 }
 
-export interface ICTEState {
+export interface ICTETrait {
   __state: {
     cteValue?: ICTETerm;
   };
@@ -67,7 +67,7 @@ const cteTerm = (args: {
   };
 };
 
-const cteTermState = <T extends ICTEState>(
+const cteTermToken = <T extends ICTETrait>(
   current: T,
   args: {
     table: string;
@@ -90,7 +90,7 @@ const cteTermState = <T extends ICTEState>(
     throw new Error("WITH is not recursive");
   }
 
-  const newState: ICTEState["__state"] = {
+  const newState: ICTETrait["__state"] = {
     ...current.__state,
     cteValue: current.__state.cteValue
       ? {
@@ -125,7 +125,7 @@ const cteTermState = <T extends ICTEState>(
   };
 };
 
-export function With<T extends ICTEState>(
+export function With<T extends ICTETrait>(
   this: T,
   args: {
     table: string;
@@ -133,10 +133,10 @@ export function With<T extends ICTEState>(
     select: ISelectStatement | IValuesStatement | ISql;
   }
 ): T {
-  return cteTermState(this, { ...args, recursive: false });
+  return cteTermToken(this, { ...args, recursive: false });
 }
 
-export function withRecursive<T extends ICTEState>(
+export function withRecursive<T extends ICTETrait>(
   this: T,
   args: {
     table: string;
@@ -144,11 +144,11 @@ export function withRecursive<T extends ICTEState>(
     select: ISelectStatement | IValuesStatement | ISql;
   }
 ): T {
-  return cteTermState(this, { ...args, recursive: true });
+  return cteTermToken(this, { ...args, recursive: true });
 }
 
-export function withoutWith<T extends ICTEState>(this: T): T {
-  const newState: ICTEState["__state"] = {
+export function withoutWith<T extends ICTETrait>(this: T): T {
+  const newState: ICTETrait["__state"] = {
     ...this.__state,
     cteValue: undefined,
   };

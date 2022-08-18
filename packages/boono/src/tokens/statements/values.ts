@@ -3,40 +3,40 @@ import { IPrimitiveValue, ISqlAdapter, sql } from "@kikko-land/sql";
 import { IBaseToken, TokenType } from "../../types";
 import {
   except,
-  ICompoundState,
+  ICompoundTrait,
   intersect,
   union,
   unionAll,
   withoutCompound,
 } from "../compounds";
-import { ICTEState, With, withoutWith, withRecursive } from "../cte";
+import { ICTETrait, With, withoutWith, withRecursive } from "../cte";
 import {
-  buildInitialLimitOffsetState,
-  ILimitOffsetState,
+  buildInitialLimitOffset,
+  ILimitOffsetTrait,
   limit,
   offset,
   withoutLimit,
   withoutOffset,
 } from "../limitOffset";
 import {
-  IOrderState,
+  IOrderTrait,
   orderBy,
-  orderByForState,
-  withoutOrderForState,
+  orderByTrait,
+  withoutOrderTrait,
 } from "../order";
 
 export interface IValuesStatement
   extends IBaseToken<TokenType.Values>,
-    IOrderState,
-    ICompoundState,
-    ILimitOffsetState,
-    ICTEState {
+    IOrderTrait,
+    ICompoundTrait,
+    ILimitOffsetTrait,
+    ICTETrait {
   __state: {
     values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[][];
-  } & IOrderState["__state"] &
-    ICompoundState["__state"] &
-    ILimitOffsetState["__state"] &
-    ICTEState["__state"];
+  } & IOrderTrait["__state"] &
+    ICompoundTrait["__state"] &
+    ILimitOffsetTrait["__state"] &
+    ICTETrait["__state"];
 }
 
 export const values = (
@@ -48,11 +48,11 @@ export const values = (
       compoundValues: [],
       ordersBox: orderBy(),
       values: vals,
-      limitOffsetValue: buildInitialLimitOffsetState(),
+      limitOffsetValue: buildInitialLimitOffset(),
     },
 
-    orderBy: orderByForState,
-    withoutOrder: withoutOrderForState,
+    orderBy: orderByTrait,
+    withoutOrder: withoutOrderTrait,
 
     union,
     unionAll,

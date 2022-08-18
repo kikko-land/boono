@@ -22,13 +22,13 @@ type IReturningArg =
   | IBaseToken
   | { [key: string]: ISqlAdapter | string | ISelectStatement };
 
-export interface IReturningState {
+export interface IReturningTrait {
   __state: {
     returningValue: IReturningClause;
   };
 
-  returning: typeof returningForState;
-  withoutReturning: typeof withoutReturningForState;
+  returning: typeof returningTrait;
+  withoutReturning: typeof withoutReturningTrait;
 }
 
 export const returning = (...args: IReturningArg[]): IReturningClause => {
@@ -67,11 +67,11 @@ export const returning = (...args: IReturningArg[]): IReturningClause => {
   };
 };
 
-export function returningForState<T extends IReturningState>(
+export function returningTrait<T extends IReturningTrait>(
   this: T,
   ...args: IReturningArg[]
 ): T {
-  const state: IReturningState["__state"] = {
+  const state: IReturningTrait["__state"] = {
     ...this.__state,
     returningValue: {
       ...this.__state.returningValue,
@@ -90,10 +90,8 @@ export function returningForState<T extends IReturningState>(
   };
 }
 
-export function withoutReturningForState<T extends IReturningState>(
-  this: T
-): T {
-  const state: IReturningState["__state"] = {
+export function withoutReturningTrait<T extends IReturningTrait>(this: T): T {
+  const state: IReturningTrait["__state"] = {
     ...this.__state,
     returningValue: returning(),
   };

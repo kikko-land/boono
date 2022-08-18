@@ -6,10 +6,10 @@ import {
 } from "@kikko-land/sql";
 
 import { IBaseToken, isToken, TokenType } from "../../types";
-import { ICTEState, With, withoutWith, withRecursive } from "../cte";
-import { from, fromToSql, IFromState } from "../from";
+import { ICTETrait, With, withoutWith, withRecursive } from "../cte";
+import { from, fromToSql, IFromTrait } from "../from";
 import {
-  IJoinState,
+  IJoinToTrait,
   join,
   joinCross,
   joinFull,
@@ -30,7 +30,7 @@ import {
   withoutJoin,
 } from "../join";
 import {
-  IOrReplaceState,
+  IOrReplaceTokenTrait,
   orAbort,
   orFail,
   orIgnore,
@@ -39,13 +39,13 @@ import {
 } from "../orReplace";
 import { buildRawSql } from "../rawSql";
 import {
-  IReturningState,
+  IReturningTrait,
   returning,
-  returningForState,
-  withoutReturningForState,
+  returningTrait,
+  withoutReturningTrait,
 } from "../returning";
 import { wrapParentheses } from "../utils";
-import { IWhereState, orWhere, where } from "../where";
+import { IWhereTrait, orWhere, where } from "../where";
 import { ISelectStatement } from "./select";
 import { IValuesStatement } from "./values";
 
@@ -62,21 +62,21 @@ type ISetValue =
 
 export interface IUpdateStatement
   extends IBaseToken<TokenType.Update>,
-    ICTEState,
-    IWhereState,
-    IFromState,
-    IReturningState,
-    IOrReplaceState,
-    IJoinState {
+    ICTETrait,
+    IWhereTrait,
+    IFromTrait,
+    IReturningTrait,
+    IOrReplaceTokenTrait,
+    IJoinToTrait {
   __state: {
     updateTable: IContainsTable;
     setValues: ISetValue[];
-  } & IFromState["__state"] &
-    IOrReplaceState["__state"] &
-    IJoinState["__state"] &
-    IReturningState["__state"] &
-    ICTEState["__state"] &
-    IWhereState["__state"];
+  } & IFromTrait["__state"] &
+    IOrReplaceTokenTrait["__state"] &
+    IJoinToTrait["__state"] &
+    IReturningTrait["__state"] &
+    ICTETrait["__state"] &
+    IWhereTrait["__state"];
 
   set(...args: ISetArgType[]): IUpdateStatement;
 }
@@ -113,8 +113,8 @@ export const update = (tbl: string | IContainsTable): IUpdateStatement => {
     where,
     orWhere,
 
-    returning: returningForState,
-    withoutReturning: withoutReturningForState,
+    returning: returningTrait,
+    withoutReturning: withoutReturningTrait,
 
     orAbort,
     orFail,

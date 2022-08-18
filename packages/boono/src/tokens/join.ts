@@ -116,7 +116,7 @@ export type IToJoinArg =
   | string
   | { [key: string]: ISqlAdapter | ISelectStatement | string };
 
-export interface IJoinState {
+export interface IJoinToTrait {
   __state: {
     joinValues: IJoinExpr[];
   };
@@ -148,12 +148,12 @@ export interface IJoinState {
   joinInnerNatural: typeof joinInnerNatural;
 }
 
-export function join<T extends IJoinState>(
+export function join<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [...this.__state.joinValues, baseJoin(undefined, toJoin, on)],
   };
@@ -161,12 +161,12 @@ export function join<T extends IJoinState>(
   return { ...this, __state: state };
 }
 
-export function joinCross<T extends IJoinState>(
+export function joinCross<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ) {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -181,11 +181,11 @@ export function joinCross<T extends IJoinState>(
 }
 
 export function joinNatural(
-  this: IJoinState,
+  this: IJoinToTrait,
   toJoin: IToJoinArg,
   on?: IConditionValue
-): IJoinState {
-  const state: IJoinState["__state"] = {
+): IJoinToTrait {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -199,12 +199,12 @@ export function joinNatural(
   };
 }
 
-export function joinLeftNatural<T extends IJoinState>(
+export function joinLeftNatural<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -222,12 +222,12 @@ export function joinLeftNatural<T extends IJoinState>(
   };
 }
 
-export function joinRightNatural<T extends IJoinState>(
+export function joinRightNatural<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -245,12 +245,12 @@ export function joinRightNatural<T extends IJoinState>(
   };
 }
 
-export function joinFullNatural<T extends IJoinState>(
+export function joinFullNatural<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -268,12 +268,12 @@ export function joinFullNatural<T extends IJoinState>(
   };
 }
 
-export function joinLeftNaturalOuter<T extends IJoinState>(
+export function joinLeftNaturalOuter<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -290,12 +290,12 @@ export function joinLeftNaturalOuter<T extends IJoinState>(
     __state: state,
   };
 }
-export function joinRightNaturalOuter<T extends IJoinState>(
+export function joinRightNaturalOuter<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -312,12 +312,12 @@ export function joinRightNaturalOuter<T extends IJoinState>(
     __state: state,
   };
 }
-export function joinFullNaturalOuter<T extends IJoinState>(
+export function joinFullNaturalOuter<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -335,12 +335,12 @@ export function joinFullNaturalOuter<T extends IJoinState>(
   };
 }
 
-export function joinInnerNatural<T extends IJoinState>(
+export function joinInnerNatural<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -354,12 +354,12 @@ export function joinInnerNatural<T extends IJoinState>(
   };
 }
 
-export function joinLeft<T extends IJoinState>(
+export function joinLeft<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -373,12 +373,12 @@ export function joinLeft<T extends IJoinState>(
     __state: state,
   };
 }
-export function joinRight<T extends IJoinState>(
+export function joinRight<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -392,12 +392,12 @@ export function joinRight<T extends IJoinState>(
     __state: state,
   };
 }
-export function joinFull<T extends IJoinState>(
+export function joinFull<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -411,12 +411,12 @@ export function joinFull<T extends IJoinState>(
   };
 }
 
-export function joinLeftOuter<T extends IJoinState>(
+export function joinLeftOuter<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -434,12 +434,12 @@ export function joinLeftOuter<T extends IJoinState>(
     __state: state,
   };
 }
-export function joinRightOuter<T extends IJoinState>(
+export function joinRightOuter<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -457,12 +457,12 @@ export function joinRightOuter<T extends IJoinState>(
     __state: state,
   };
 }
-export function joinFullOuter<T extends IJoinState>(
+export function joinFullOuter<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -481,12 +481,12 @@ export function joinFullOuter<T extends IJoinState>(
   };
 }
 
-export function joinInner<T extends IJoinState>(
+export function joinInner<T extends IJoinToTrait>(
   this: T,
   toJoin: IToJoinArg,
   on?: IConditionValue
 ): T {
-  const state: IJoinState["__state"] = {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [
       ...this.__state.joinValues,
@@ -500,8 +500,8 @@ export function joinInner<T extends IJoinState>(
   };
 }
 
-export function withoutJoin<T extends IJoinState>(this: T): T {
-  const state: IJoinState["__state"] = {
+export function withoutJoin<T extends IJoinToTrait>(this: T): T {
+  const state: IJoinToTrait["__state"] = {
     ...this.__state,
     joinValues: [],
   };

@@ -6,9 +6,9 @@ import {
 } from "@kikko-land/sql";
 
 import { IBaseToken, isToken, TokenType } from "../../types";
-import { ICTEState, ICTETerm, With, withoutWith, withRecursive } from "../cte";
+import { ICTETrait, With, withoutWith, withRecursive } from "../cte";
 import {
-  IOrReplaceState,
+  IOrReplaceTokenTrait,
   orAbort,
   orFail,
   orIgnore,
@@ -17,10 +17,10 @@ import {
 } from "../orReplace";
 import { buildRawSql } from "../rawSql";
 import {
-  IReturningState,
+  IReturningTrait,
   returning,
-  returningForState,
-  withoutReturningForState,
+  returningTrait,
+  withoutReturningTrait,
 } from "../returning";
 import { ISelectStatement, isSelect } from "./select";
 import { isValues, IValuesStatement } from "./values";
@@ -28,9 +28,9 @@ import { isValues, IValuesStatement } from "./values";
 // TODO: on conflict support
 export interface IInsertStatement
   extends IBaseToken<TokenType.Insert>,
-    ICTEState,
-    IReturningState,
-    IOrReplaceState {
+    ICTETrait,
+    IReturningTrait,
+    IOrReplaceTokenTrait {
   __state: {
     intoTable?: string | IContainsTable;
     columnNames: string[];
@@ -39,9 +39,9 @@ export interface IInsertStatement
       | IValuesStatement
       | ISelectStatement
       | { columnName: string; value: IPrimitiveValue | IBaseToken }[][];
-  } & ICTEState["__state"] &
-    IReturningState["__state"] &
-    IOrReplaceState["__state"];
+  } & ICTETrait["__state"] &
+    IReturningTrait["__state"] &
+    IOrReplaceTokenTrait["__state"];
 
   setColumnNames(columnNames: string[]): IInsertStatement;
   withoutColumnNames(): IInsertStatement;
@@ -120,8 +120,8 @@ export const insert = (insertArg: IInsertArg): IInsertStatement => {
     orReplace,
     orRollback,
 
-    returning: returningForState,
-    withoutReturning: withoutReturningForState,
+    returning: returningTrait,
+    withoutReturning: withoutReturningTrait,
 
     setColumnNames(names: string[]): IInsertStatement {
       return { ...this, __state: { ...this.__state, columnNames: names } };

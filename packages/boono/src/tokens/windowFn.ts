@@ -4,10 +4,10 @@ import { IBaseToken, TokenType } from "../types";
 import { and, conditionValuesToToken, IConditionValue } from "./binary";
 import {
   IOrdersBoxTerm,
-  IOrderState,
+  IOrderTrait,
   orderBy,
-  orderByForState,
-  withoutOrderForState,
+  orderByTrait,
+  withoutOrderTrait,
 } from "./order";
 import { toToken } from "./rawSql";
 
@@ -69,7 +69,7 @@ export const windowFn = (fn: ISqlAdapter | IBaseToken): IWindowClause => {
 
 export interface IWindowBodyClause
   extends IBaseToken<TokenType.WindowBody>,
-    IOrderState {
+    IOrderTrait {
   __state: {
     partitionByValues: (IBaseToken | ISql | string)[];
     baseWindowName?: string;
@@ -93,8 +93,8 @@ export const windowBody = (): IWindowBodyClause => {
     fromBase(name: string) {
       return { ...this, __state: { ...this.__state, baseWindowName: name } };
     },
-    orderBy: orderByForState,
-    withoutOrder: withoutOrderForState,
+    orderBy: orderByTrait,
+    withoutOrder: withoutOrderTrait,
     partitionBy(partitionBy: IBaseToken | ISql | string) {
       return {
         ...this,

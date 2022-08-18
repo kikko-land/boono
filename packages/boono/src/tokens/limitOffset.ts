@@ -12,7 +12,7 @@ export interface ILimitOffsetTerm
   };
 }
 
-export interface ILimitOffsetState {
+export interface ILimitOffsetTrait {
   __state: {
     limitOffsetValue: ILimitOffsetTerm;
   };
@@ -23,7 +23,7 @@ export interface ILimitOffsetState {
   withoutOffset: typeof withoutOffset;
 }
 
-export const buildInitialLimitOffsetState = (): ILimitOffsetTerm => {
+export const buildInitialLimitOffset = (): ILimitOffsetTerm => {
   return {
     type: TokenType.LimitOffsetTerm,
     __state: {},
@@ -45,11 +45,11 @@ export const buildInitialLimitOffsetState = (): ILimitOffsetTerm => {
   };
 };
 
-export function limit<T extends ILimitOffsetState>(
+export function limit<T extends ILimitOffsetTrait>(
   this: T,
   val: IBaseToken | ISqlAdapter | IPrimitiveValue
 ): T {
-  const state: ILimitOffsetState["__state"] = {
+  const state: ILimitOffsetTrait["__state"] = {
     ...this.__state,
     limitOffsetValue: {
       ...this.__state.limitOffsetValue,
@@ -66,8 +66,8 @@ export function limit<T extends ILimitOffsetState>(
   };
 }
 
-export function withoutLimit<T extends ILimitOffsetState>(this: T): T {
-  const state: ILimitOffsetState["__state"] = {
+export function withoutLimit<T extends ILimitOffsetTrait>(this: T): T {
+  const state: ILimitOffsetTrait["__state"] = {
     ...this.__state,
     limitOffsetValue: {
       ...this.__state.limitOffsetValue,
@@ -84,11 +84,11 @@ export function withoutLimit<T extends ILimitOffsetState>(this: T): T {
   };
 }
 
-export function offset<T extends ILimitOffsetState>(
+export function offset<T extends ILimitOffsetTrait>(
   this: T,
   val: IBaseToken | ISqlAdapter | IPrimitiveValue
 ): T {
-  const state: ILimitOffsetState["__state"] = {
+  const state: ILimitOffsetTrait["__state"] = {
     ...this.__state,
     limitOffsetValue: {
       ...this.__state.limitOffsetValue,
@@ -105,8 +105,8 @@ export function offset<T extends ILimitOffsetState>(
   };
 }
 
-export function withoutOffset<T extends ILimitOffsetState>(this: T): T {
-  const state: ILimitOffsetState["__state"] = {
+export function withoutOffset<T extends ILimitOffsetTrait>(this: T): T {
+  const state: ILimitOffsetTrait["__state"] = {
     ...this.__state,
     limitOffsetValue: {
       ...this.__state.limitOffsetValue,

@@ -72,20 +72,20 @@ export const asc = (
   return orderTerm("ASC", val, nullOrder);
 };
 
-export interface IOrderState {
+export interface IOrderTrait {
   __state: {
     ordersBox: IOrdersBoxTerm;
   };
 
-  orderBy: typeof orderByForState;
-  withoutOrder: typeof withoutOrderForState;
+  orderBy: typeof orderByTrait;
+  withoutOrder: typeof withoutOrderTrait;
 }
 
-export function orderByForState<T extends IOrderState>(
+export function orderByTrait<T extends IOrderTrait>(
   this: T,
   ...orderTerm: IOrderTerm[]
 ): T {
-  const state: IOrderState["__state"] = {
+  const state: IOrderTrait["__state"] = {
     ...this.__state,
     ordersBox: {
       ...this.__state.ordersBox,
@@ -102,8 +102,8 @@ export function orderByForState<T extends IOrderState>(
   };
 }
 
-export function withoutOrderForState<T extends IOrderState>(this: T): T {
-  const state: IOrderState["__state"] = {
+export function withoutOrderTrait<T extends IOrderTrait>(this: T): T {
+  const state: IOrderTrait["__state"] = {
     ...this.__state,
     ordersBox: {
       ...this.__state.ordersBox,

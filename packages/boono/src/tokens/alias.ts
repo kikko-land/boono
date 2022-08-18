@@ -9,7 +9,7 @@ import { IBaseToken, TokenType } from "../types";
 import { toToken } from "./rawSql";
 import { wrapParentheses } from "./utils";
 
-export type IAlias = IBaseToken<TokenType.Alias> & {
+export type IAliasToken = IBaseToken<TokenType.Alias> & {
   __state: {
     left: IBaseToken;
     right: string;
@@ -19,7 +19,7 @@ export type IAlias = IBaseToken<TokenType.Alias> & {
 export const alias = (
   left: IBaseToken | ISqlAdapter | IPrimitiveValue | IContainsTable,
   right: string
-): IAlias => {
+): IAliasToken => {
   return {
     type: TokenType.Alias,
     __state: {

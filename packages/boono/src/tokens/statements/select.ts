@@ -4,16 +4,16 @@ import { IBaseToken, isToken, TokenType } from "../../types";
 import { alias } from "../alias";
 import {
   except,
-  ICompoundState,
+  ICompoundTrait,
   intersect,
   union,
   unionAll,
   withoutCompound,
 } from "../compounds";
-import { ICTEState, With, withoutWith, withRecursive } from "../cte";
-import { from, fromToSql, IFromState } from "../from";
+import { ICTETrait, With, withoutWith, withRecursive } from "../cte";
+import { from, fromToSql, IFromTrait } from "../from";
 import {
-  IJoinState,
+  IJoinToTrait,
   join,
   joinCross,
   joinFull,
@@ -34,21 +34,21 @@ import {
   withoutJoin,
 } from "../join";
 import {
-  buildInitialLimitOffsetState,
-  ILimitOffsetState,
+  buildInitialLimitOffset,
+  ILimitOffsetTrait,
   limit,
   offset,
   withoutLimit,
   withoutOffset,
 } from "../limitOffset";
 import {
-  IOrderState,
+  IOrderTrait,
   orderBy,
-  orderByForState,
-  withoutOrderForState,
+  orderByTrait,
+  withoutOrderTrait,
 } from "../order";
 import { toToken } from "../rawSql";
-import { IWhereState, orWhere, where } from "../where";
+import { IWhereTrait, orWhere, where } from "../where";
 import { IValuesStatement } from "./values";
 
 export const isSelect = (val: unknown): val is ISelectStatement => {
@@ -61,13 +61,13 @@ export const isSelect = (val: unknown): val is ISelectStatement => {
 
 export interface ISelectStatement
   extends IBaseToken<TokenType.Select>,
-    IOrderState,
-    ICompoundState,
-    ILimitOffsetState,
-    ICTEState,
-    IWhereState,
-    IFromState,
-    IJoinState {
+    IOrderTrait,
+    ICompoundTrait,
+    ILimitOffsetTrait,
+    ICTETrait,
+    IWhereTrait,
+    IFromTrait,
+    IJoinToTrait {
   __state: {
     definedWindowFunctions: {
       name: string;
@@ -83,13 +83,13 @@ export interface ISelectStatement
 
     groupByValues: (IBaseToken | string)[];
     havingValue?: IBaseToken;
-  } & IFromState["__state"] &
-    ILimitOffsetState["__state"] &
-    ICTEState["__state"] &
-    IJoinState["__state"] &
-    IOrderState["__state"] &
-    ICompoundState["__state"] &
-    IWhereState["__state"];
+  } & IFromTrait["__state"] &
+    ILimitOffsetTrait["__state"] &
+    ICTETrait["__state"] &
+    IJoinToTrait["__state"] &
+    IOrderTrait["__state"] &
+    ICompoundTrait["__state"] &
+    IWhereTrait["__state"];
 
   defineWindow(
     name: string,
@@ -143,7 +143,7 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
       selectValues: selectArgsToValues(selectArgs),
       groupByValues: [],
       joinValues: [],
-      limitOffsetValue: buildInitialLimitOffsetState(),
+      limitOffsetValue: buildInitialLimitOffset(),
       fromValues: [],
     },
     select(...selectArgs: ISelectArgType[]): ISelectStatement {
@@ -191,8 +191,8 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
         __state: { ...this.__state, havingValue: toToken(val) },
       };
     },
-    orderBy: orderByForState,
-    withoutOrder: withoutOrderForState,
+    orderBy: orderByTrait,
+    withoutOrder: withoutOrderTrait,
 
     defineWindow(name: string, body: IBaseToken<TokenType.WindowBody>) {
       return {

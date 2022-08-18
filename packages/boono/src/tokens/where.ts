@@ -8,7 +8,7 @@ import {
 } from "./binary";
 import { IUnaryOperator } from "./unary";
 
-export interface IWhereState {
+export interface IWhereTrait {
   __state: {
     whereValue?: IBaseToken | IBinaryOperator | IUnaryOperator;
   };
@@ -17,7 +17,7 @@ export interface IWhereState {
   orWhere: typeof orWhere;
 }
 
-const constructWhere = function<T extends IWhereState>(
+const constructWhere = function<T extends IWhereTrait>(
   current: T,
   andOrOr: "and" | "or",
   values: IConditionValue[]
@@ -26,7 +26,7 @@ const constructWhere = function<T extends IWhereState>(
     ? [current.__state.whereValue, ...conditionValuesToToken(values)]
     : conditionValuesToToken(values);
 
-  const state: IWhereState["__state"] = (() => {
+  const state: IWhereTrait["__state"] = (() => {
     if (finalValues.length > 1) {
       return {
         ...current.__state,
@@ -41,14 +41,14 @@ const constructWhere = function<T extends IWhereState>(
   return { ...current, __state: state };
 };
 
-export function where<T extends IWhereState>(
+export function where<T extends IWhereTrait>(
   this: T,
   ...values: IConditionValue[]
 ): T {
   return constructWhere(this, "and", values);
 }
 
-export function orWhere<T extends IWhereState>(
+export function orWhere<T extends IWhereTrait>(
   this: T,
   ...values: IConditionValue[]
 ): T {

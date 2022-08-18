@@ -12,7 +12,7 @@ export interface ICompoundOperator extends IBaseToken<TokenType.OrderTerm> {
   value: ISelectStatement | IValuesStatement | IBaseToken<TokenType.RawSql>;
 }
 
-export interface ICompoundState {
+export interface ICompoundTrait {
   __state: {
     compoundValues: ICompoundOperator[];
   };
@@ -24,12 +24,12 @@ export interface ICompoundState {
   withoutCompound: typeof withoutCompound;
 }
 
-const makeCompounds = <T extends ICompoundState>(
+const makeCompounds = <T extends ICompoundTrait>(
   term: T,
   type: "UNION" | "UNION ALL" | "INTERSECT" | "EXCEPT",
   values: IUnionArg[]
 ): T => {
-  const state: ICompoundState["__state"] = {
+  const state: ICompoundTrait["__state"] = {
     ...term.__state,
     compoundValues: [
       ...term.__state.compoundValues,
@@ -68,33 +68,33 @@ const makeCompounds = <T extends ICompoundState>(
   };
 };
 
-export function union<T extends ICompoundState>(
+export function union<T extends ICompoundTrait>(
   this: T,
   ...values: IUnionArg[]
 ) {
   return makeCompounds(this, "UNION", values);
 }
-export function unionAll<T extends ICompoundState>(
+export function unionAll<T extends ICompoundTrait>(
   this: T,
   ...values: IUnionArg[]
 ) {
   return makeCompounds(this, "UNION ALL", values);
 }
-export function intersect<T extends ICompoundState>(
+export function intersect<T extends ICompoundTrait>(
   this: T,
   ...values: IUnionArg[]
 ) {
   return makeCompounds(this, "INTERSECT", values);
 }
-export function except<T extends ICompoundState>(
+export function except<T extends ICompoundTrait>(
   this: T,
   ...values: IUnionArg[]
 ) {
   return makeCompounds(this, "EXCEPT", values);
 }
 
-export function withoutCompound<T extends ICompoundState>(this: T) {
-  const state: ICompoundState["__state"] = {
+export function withoutCompound<T extends ICompoundTrait>(this: T) {
+  const state: ICompoundTrait["__state"] = {
     ...this.__state,
     compoundValues: [],
   };

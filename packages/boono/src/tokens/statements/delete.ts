@@ -1,25 +1,25 @@
 import { IContainsTable, sql } from "@kikko-land/sql";
 
 import { IBaseToken, TokenType } from "../../types";
-import { ICTEState, With, withoutWith, withRecursive } from "../cte";
+import { ICTETrait, With, withoutWith, withRecursive } from "../cte";
 import {
-  IReturningState,
+  IReturningTrait,
   returning,
-  returningForState,
-  withoutReturningForState,
+  returningTrait,
+  withoutReturningTrait,
 } from "../returning";
-import { IWhereState, orWhere, where } from "../where";
+import { IWhereTrait, orWhere, where } from "../where";
 
 export interface IDeleteStatement
   extends IBaseToken<TokenType.Delete>,
-    ICTEState,
-    IWhereState,
-    IReturningState {
+    ICTETrait,
+    IWhereTrait,
+    IReturningTrait {
   __state: {
     deleteTable: IContainsTable;
-  } & IReturningState["__state"] &
-    ICTEState["__state"] &
-    IWhereState["__state"];
+  } & IReturningTrait["__state"] &
+    ICTETrait["__state"] &
+    IWhereTrait["__state"];
 }
 
 export const deleteFrom = (tbl: string | IContainsTable): IDeleteStatement => {
@@ -37,8 +37,8 @@ export const deleteFrom = (tbl: string | IContainsTable): IDeleteStatement => {
     where,
     orWhere,
 
-    returning: returningForState,
-    withoutReturning: withoutReturningForState,
+    returning: returningTrait,
+    withoutReturning: withoutReturningTrait,
 
     toSql() {
       return sql.join(

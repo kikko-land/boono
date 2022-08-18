@@ -1,4 +1,4 @@
-export interface IOrReplaceState {
+export interface IOrReplaceTokenTrait {
   __state: {
     orReplaceValue?: "ABORT" | "FAIL" | "IGNORE" | "REPLACE" | "ROLLBACK";
   };
@@ -10,40 +10,40 @@ export interface IOrReplaceState {
   orRollback: typeof orRollback;
 }
 
-export function orAbort<T extends IOrReplaceState>(this: T): T {
-  const state: IOrReplaceState["__state"] = {
+export function orAbort<T extends IOrReplaceTokenTrait>(this: T): T {
+  const state: IOrReplaceTokenTrait["__state"] = {
     orReplaceValue: "ABORT",
   };
 
   return { ...this, __state: state };
 }
 
-export function orFail<T extends IOrReplaceState>(this: T): T {
-  const state: IOrReplaceState["__state"] = {
+export function orFail<T extends IOrReplaceTokenTrait>(this: T): T {
+  const state: IOrReplaceTokenTrait["__state"] = {
     orReplaceValue: "FAIL",
   };
 
   return { ...this, __state: state };
 }
 
-export function orIgnore<T extends IOrReplaceState>(this: T): T {
-  const state: IOrReplaceState["__state"] = {
+export function orIgnore<T extends IOrReplaceTokenTrait>(this: T): T {
+  const state: IOrReplaceTokenTrait["__state"] = {
     orReplaceValue: "IGNORE",
   };
 
   return { ...this, __state: state };
 }
 
-export function orReplace<T extends IOrReplaceState>(this: T): T {
-  const state: IOrReplaceState["__state"] = {
+export function orReplace<T extends IOrReplaceTokenTrait>(this: T): T {
+  const state: IOrReplaceTokenTrait["__state"] = {
     orReplaceValue: "REPLACE",
   };
 
   return { ...this, __state: state };
 }
 
-export function orRollback<T extends IOrReplaceState>(this: T): T {
-  const state: IOrReplaceState["__state"] = {
+export function orRollback<T extends IOrReplaceTokenTrait>(this: T): T {
+  const state: IOrReplaceTokenTrait["__state"] = {
     orReplaceValue: "ROLLBACK",
   };
 

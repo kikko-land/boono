@@ -5,7 +5,7 @@ import { alias } from "./alias";
 import { toToken } from "./rawSql";
 import { wrapParentheses } from "./utils";
 
-export interface IFromState {
+export interface IFromTrait {
   __state: {
     fromValues: (
       | IContainsTable
@@ -17,7 +17,7 @@ export interface IFromState {
   from: typeof from;
 }
 
-export function from<T extends IFromState>(
+export function from<T extends IFromTrait>(
   this: T,
   ...values: (
     | IBaseToken
@@ -27,7 +27,7 @@ export function from<T extends IFromState>(
     | Record<string, IBaseToken | ISqlAdapter | IContainsTable | string>
   )[]
 ): T {
-  const state: IFromState["__state"] = {
+  const state: IFromTrait["__state"] = {
     ...this.__state,
     fromValues: [
       ...this.__state.fromValues,
@@ -57,7 +57,7 @@ export function from<T extends IFromState>(
   };
 }
 
-export const fromToSql = (state: IFromState): ISql | null => {
+export const fromToSql = (state: IFromTrait): ISql | null => {
   return state.__state.fromValues.length > 0
     ? sql.join(
         state.__state.fromValues.map((v) =>
