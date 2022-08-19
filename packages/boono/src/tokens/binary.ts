@@ -1,5 +1,4 @@
 import { IPrimitiveValue, ISqlAdapter, sql } from "@kikko-land/sql";
-import SqlString from "sqlstring";
 
 import { IBaseToken, isToken, TokenType } from "../types";
 import { toToken } from "./rawSql";
@@ -22,9 +21,7 @@ export interface IBinaryOperator extends IBaseToken<TokenType.Binary> {
       | "NOT IN"
       | "LIKE"
       | "NOT LIKE"
-      // TODO: add all
-      | "BETWEEN"
-      | "NOT BETWEEN"
+      // TODO: next to add
       | "GLOB"
       | "NOT GLOB"
       | "MATCH"
@@ -33,6 +30,8 @@ export interface IBinaryOperator extends IBaseToken<TokenType.Binary> {
       | "NOT REGEXP";
     left: IBaseToken;
     right: IBaseToken | IBaseToken[];
+    escape?: string | undefined;
+    // append?: ISqlAdapter | IBaseToken | undefined;
   };
 }
 
@@ -53,7 +52,8 @@ const binaryOperator = (
     | ISqlAdapter
     | IPrimitiveValue
     | (IBaseToken | ISqlAdapter | IPrimitiveValue)[],
-  additional?: ISqlAdapter | IBaseToken
+  escape?: string
+  // append?: ISqlAdapter | IBaseToken | undefined
 ): IBinaryOperator => {
   return {
     type: TokenType.Binary,
@@ -61,15 +61,24 @@ const binaryOperator = (
       left: toToken(left),
       right: Array.isArray(right) ? right.map(toToken) : toToken(right),
       operator: operator,
+      escape: escape,
     },
     toSql() {
-      return sql`${wrapParentheses(this.__state.left)} ${sql.raw(
-        this.__state.operator
-      )} ${
-        Array.isArray(this.__state.right)
-          ? sql`(${sql.join(this.__state.right)})`
-          : wrapParentheses(this.__state.right)
-      }${additional ? sql` ${additional}` : sql.empty}`;
+      return sql.join(
+        [
+          wrapParentheses(this.__state.left),
+          sql.raw(this.__state.operator),
+
+          Array.isArray(this.__state.right)
+            ? sql`(${sql.join(this.__state.right)})`
+            : wrapParentheses(this.__state.right),
+
+          this.__state.escape
+            ? sql`ESCAPE ${sql.escapeString(this.__state.escape)}`
+            : sql.empty,
+        ],
+        " "
+      );
     },
   };
 };
@@ -143,12 +152,7 @@ const performLike = (
   right: IBaseToken | ISqlAdapter | IPrimitiveValue,
   escape?: string
 ) => {
-  return binaryOperator(
-    not ? "NOT LIKE" : "LIKE",
-    left,
-    right,
-    escape ? sql`ESCAPE ${sql.escapeString(escape)}` : undefined
-  );
+  return binaryOperator(not ? "NOT LIKE" : "LIKE", left, right, escape);
 };
 
 export const like = (
@@ -210,7 +214,7 @@ export type IConditionValue =
   | ISqlAdapter
   | Record<
       string,
-      | ((left: IBaseToken | ISqlAdapter | IPrimitiveValue) => IBinaryOperator)
+      | ((left: IBaseToken | ISqlAdapter | IPrimitiveValue) => IBaseToken)
       | IBaseToken
       | ISqlAdapter
       | IPrimitiveValue

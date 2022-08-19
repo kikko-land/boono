@@ -2,6 +2,7 @@ import { ISql } from "@kikko-land/sql";
 
 export enum TokenType {
   Binary = "Binary",
+  Between = "Between",
   Unary = "Unary",
   Alias = "Alias",
   Compound = "Compound",
