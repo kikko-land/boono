@@ -265,7 +265,7 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
               if (val.toSelect === "*") {
                 return sql`*`;
               } else if (typeof val.toSelect === "string" && !val.alias) {
-                return sql.liter(val.toSelect);
+                return sql.ident(val.toSelect);
               } else {
                 return val.alias
                   ? alias(val.toSelect, val.alias)
@@ -290,7 +290,7 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
           this.__state.groupByValues.length > 0
             ? sql`GROUP BY ${sql.join(
                 this.__state.groupByValues.map((val) =>
-                  typeof val === "string" ? sql.liter(val) : val
+                  typeof val === "string" ? sql.ident(val) : val
                 )
               )}`
             : null,
@@ -303,7 +303,7 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
                 sql.join(
                   this.__state.definedWindowFunctions.map(
                     ({ name, windowBody }) =>
-                      sql`${sql.strip(name)} AS (${windowBody})`
+                      sql`${sql.stripIdent(name)} AS (${windowBody})`
                   ),
                   ", "
                 ),

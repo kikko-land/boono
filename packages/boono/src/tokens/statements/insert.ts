@@ -181,7 +181,7 @@ export const insert = (insertArg: IInsertArg): IInsertStatement => {
             ? sql.table(this.__state.intoTable)
             : this.__state.intoTable,
           columns.length > 0
-            ? sql`(${sql.join(columns.map((c) => sql.liter(c)))})`
+            ? sql`(${sql.join(columns.map((c) => sql.ident(c)))})`
             : null,
           isValues(this.__state.toInsertValue) ||
           isSelect(this.__state.toInsertValue)

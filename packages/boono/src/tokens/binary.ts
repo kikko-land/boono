@@ -1,4 +1,5 @@
 import { IPrimitiveValue, ISqlAdapter, sql } from "@kikko-land/sql";
+import SqlString from "sqlstring";
 
 import { IBaseToken, isToken, TokenType } from "../types";
 import { toToken } from "./rawSql";
@@ -51,7 +52,8 @@ const binaryOperator = (
     | IBaseToken
     | ISqlAdapter
     | IPrimitiveValue
-    | (IBaseToken | ISqlAdapter | IPrimitiveValue)[]
+    | (IBaseToken | ISqlAdapter | IPrimitiveValue)[],
+  additional?: ISqlAdapter | IBaseToken
 ): IBinaryOperator => {
   return {
     type: TokenType.Binary,
@@ -67,7 +69,7 @@ const binaryOperator = (
         Array.isArray(this.__state.right)
           ? sql`(${sql.join(this.__state.right)})`
           : wrapParentheses(this.__state.right)
-      }`;
+      }${additional ? sql` ${additional}` : sql.empty}`;
     },
   };
 };
@@ -135,26 +137,48 @@ export const ltEq = (
   return binaryOperator("<=", left, right);
 };
 
+const performLike = (
+  not: boolean,
+  left: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  escape?: string
+) => {
+  return binaryOperator(
+    not ? "NOT LIKE" : "LIKE",
+    left,
+    right,
+    escape ? sql`ESCAPE ${sql.escapeString(escape)}` : undefined
+  );
+};
+
 export const like = (
   left: IBaseToken | ISqlAdapter | IPrimitiveValue,
-  right: IBaseToken | ISqlAdapter | IPrimitiveValue
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  escape?: string
 ) => {
-  return binaryOperator("LIKE", left, right);
+  return performLike(false, left, right, escape);
 };
-export const like$ = (right: IBaseToken | ISqlAdapter | IPrimitiveValue) => {
+export const like$ = (
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  escape?: string
+) => {
   return (left: IBaseToken | ISqlAdapter | IPrimitiveValue) =>
-    like(left, right);
+    like(left, right, escape);
 };
 
 export const notLike = (
   left: IBaseToken | ISqlAdapter | IPrimitiveValue,
-  right: IBaseToken | ISqlAdapter | IPrimitiveValue
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  escape?: string
 ) => {
-  return binaryOperator("NOT LIKE", left, right);
+  return performLike(true, left, right, escape);
 };
-export const notLike$ = (right: IBaseToken | ISqlAdapter | IPrimitiveValue) => {
+export const notLike$ = (
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  escape?: string
+) => {
   return (left: IBaseToken | ISqlAdapter | IPrimitiveValue) =>
-    notLike(left, right);
+    notLike(left, right, escape);
 };
 
 export const In = (
@@ -200,8 +224,8 @@ export const conditionValuesToToken = (values: IConditionValue[]) => {
         : Object.entries(v).map(([k, expr]) =>
             toToken(
               typeof expr === "function"
-                ? expr(sql.liter(k))
-                : eq(sql.liter(k), expr)
+                ? expr(sql.ident(k))
+                : eq(sql.ident(k), expr)
             )
           )
     )

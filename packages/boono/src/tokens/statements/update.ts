@@ -186,7 +186,7 @@ export const update = (tbl: string | IContainsTable): IUpdateStatement => {
             this.__state.setValues.map((val) =>
               isToken(val)
                 ? val
-                : sql`${sql.liter(val.columnName)} = ${wrapParentheses(
+                : sql`${sql.ident(val.columnName)} = ${wrapParentheses(
                     val.toSet
                   )}`
             )

@@ -4,7 +4,7 @@ import { sql } from "./sql";
 
 describe("sql", () => {
   it("works", () => {
-    const query = sql`SELECT * FROM ${sql.table("users")} WHERE ${sql.liter(
+    const query = sql`SELECT * FROM ${sql.table("users")} WHERE ${sql.ident(
       "num"
     )}=${1} AND nullColl=${null} AND ids IN ${sql.join(
       [1, 2, 3],

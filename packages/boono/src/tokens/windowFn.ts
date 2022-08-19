@@ -117,12 +117,12 @@ export const windowBody = (): IWindowBodyClause => {
       return sql.join(
         [
           this.__state.baseWindowName
-            ? sql.strip(this.__state.baseWindowName)
+            ? sql.stripIdent(this.__state.baseWindowName)
             : sql.empty,
           this.__state.partitionByValues.length > 0
             ? sql`PARTITION BY ${sql.join(
                 this.__state.partitionByValues.map((val) =>
-                  typeof val === "string" ? sql.liter(val) : toToken(val)
+                  typeof val === "string" ? sql.ident(val) : toToken(val)
                 ),
                 ", "
               )}`

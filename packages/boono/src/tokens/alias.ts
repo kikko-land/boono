@@ -27,7 +27,7 @@ export const alias = (
       right: right,
     },
     toSql() {
-      return sql`${wrapParentheses(this.__state.left)} AS ${sql.liter(
+      return sql`${wrapParentheses(this.__state.left)} AS ${sql.ident(
         this.__state.right
       )}`;
     },

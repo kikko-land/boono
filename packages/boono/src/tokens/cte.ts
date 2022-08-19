@@ -55,8 +55,8 @@ const cteTerm = (args: {
           sql.join(
             this.__state.values.map(
               (v) =>
-                sql`${sql.liter(v.table)}(${sql.join(
-                  v.columns.map(sql.liter)
+                sql`${sql.ident(v.table)}(${sql.join(
+                  v.columns.map(sql.ident)
                 )}) AS (${v.select})`
             )
           ),

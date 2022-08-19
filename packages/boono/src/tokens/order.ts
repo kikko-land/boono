@@ -27,7 +27,7 @@ const orderTerm = (
       return sql.join(
         [
           typeof this.__state.val === "string"
-            ? sql.liter(this.__state.val)
+            ? sql.ident(this.__state.val)
             : this.__state.val,
           sql.raw(this.__state.orderType),
           nullOrder ? sql.raw(nullOrder) : sql.empty,
