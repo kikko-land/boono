@@ -1,5 +1,6 @@
 export * from "./tokens/alias";
-export * from "./tokens/binary";
+export * from "./tokens/exprs/between";
+export * from "./tokens/exprs/binary";
 export * from "./tokens/join";
 export type { IOrderTerm } from "./tokens/order";
 export { asc, desc } from "./tokens/order";

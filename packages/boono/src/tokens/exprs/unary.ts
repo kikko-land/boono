@@ -1,6 +1,6 @@
 import { IPrimitiveValue, ISqlAdapter, sql } from "@kikko-land/sql";
 
-import { IBaseToken, TokenType } from "../types";
+import { IBaseToken, TokenType } from "../../types";
 
 export interface IUnaryOperator extends IBaseToken<TokenType.Unary> {
   __state: {

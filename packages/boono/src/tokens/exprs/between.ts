@@ -1,8 +1,8 @@
 import { IPrimitiveValue, ISqlAdapter, sql } from "@kikko-land/sql";
 
-import { IBaseToken, TokenType } from "../types";
-import { toToken } from "./rawSql";
-import { wrapParentheses } from "./utils";
+import { IBaseToken, TokenType } from "../../types";
+import { toToken } from "../rawSql";
+import { wrapParentheses } from "../utils";
 
 export interface IBetweenOperator extends IBaseToken<TokenType.Between> {
   __state: {

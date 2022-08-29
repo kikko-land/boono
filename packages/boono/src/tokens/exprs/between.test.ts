@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { select } from "../statements/select";
 import { between, between$, notBetween, notBetween$ } from "./between";
-import { select } from "./statements/select";
 
 describe("between", () => {
   it("works", () => {

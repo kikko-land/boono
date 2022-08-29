@@ -4,7 +4,7 @@ import { format } from "sql-formatter";
 import { describe, expect, it } from "vitest";
 
 import { alias } from "../alias";
-import { and, eq$, gtEq, gtEq$, like$, or } from "../binary";
+import { and, eq$, gtEq, gtEq$, like$, or } from "../exprs/binary";
 import { asc, desc } from "../order";
 import { not } from "../unary";
 import { windowBody, windowFn } from "../windowFn";

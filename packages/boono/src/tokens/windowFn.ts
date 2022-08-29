@@ -1,7 +1,7 @@
 import { ISql, ISqlAdapter, sql } from "@kikko-land/sql";
 
 import { IBaseToken, TokenType } from "../types";
-import { and, conditionValuesToToken, IConditionValue } from "./binary";
+import { and, conditionValuesToToken, IConditionValue } from "./exprs/binary";
 import {
   IOrdersBoxTerm,
   IOrderTrait,

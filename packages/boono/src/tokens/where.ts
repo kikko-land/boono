@@ -5,8 +5,8 @@ import {
   IBinaryOperator,
   IConditionValue,
   or,
-} from "./binary";
-import { IUnaryOperator } from "./unary";
+} from "./exprs/binary";
+import { IUnaryOperator } from "./exprs/unary";
 
 export interface IWhereTrait {
   __state: {

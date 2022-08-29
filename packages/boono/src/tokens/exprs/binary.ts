@@ -1,11 +1,10 @@
 import { IPrimitiveValue, ISqlAdapter, sql } from "@kikko-land/sql";
 
-import { IBaseToken, isToken, TokenType } from "../types";
-import { toToken } from "./rawSql";
-import { wrapParentheses } from "./utils";
+import { IBaseToken, isToken, TokenType } from "../../types";
+import { toToken } from "../rawSql";
+import { wrapParentheses } from "../utils";
 
 // TODO: in null support
-// TODO: add ESCAPE for LIKE/NOT LIKE
 export interface IBinaryOperator extends IBaseToken<TokenType.Binary> {
   __state: {
     operator:
@@ -21,7 +20,6 @@ export interface IBinaryOperator extends IBaseToken<TokenType.Binary> {
       | "NOT IN"
       | "LIKE"
       | "NOT LIKE"
-      // TODO: next to add
       | "GLOB"
       | "NOT GLOB"
       | "MATCH"
@@ -31,7 +29,6 @@ export interface IBinaryOperator extends IBaseToken<TokenType.Binary> {
     left: IBaseToken;
     right: IBaseToken | IBaseToken[];
     escape?: string | undefined;
-    // append?: ISqlAdapter | IBaseToken | undefined;
   };
 }
 
@@ -144,6 +141,76 @@ export const ltEq = (
   right: IBaseToken | ISqlAdapter | IPrimitiveValue
 ) => {
   return binaryOperator("<=", left, right);
+};
+
+export const glob = (
+  left: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue
+) => {
+  return binaryOperator("GLOB", left, right);
+};
+export const glob$ = (right: IBaseToken | ISqlAdapter | IPrimitiveValue) => {
+  return (left: IBaseToken | ISqlAdapter | IPrimitiveValue) =>
+    glob(left, right);
+};
+
+export const notGlob = (
+  left: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue
+) => {
+  return binaryOperator("NOT GLOB", left, right);
+};
+export const notGlob$ = (right: IBaseToken | ISqlAdapter | IPrimitiveValue) => {
+  return (left: IBaseToken | ISqlAdapter | IPrimitiveValue) =>
+    notGlob(left, right);
+};
+
+export const match = (
+  left: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue
+) => {
+  return binaryOperator("MATCH", left, right);
+};
+export const match$ = (right: IBaseToken | ISqlAdapter | IPrimitiveValue) => {
+  return (left: IBaseToken | ISqlAdapter | IPrimitiveValue) =>
+    match(left, right);
+};
+
+export const notMatch = (
+  left: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue
+) => {
+  return binaryOperator("NOT MATCH", left, right);
+};
+export const notMatch$ = (
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue
+) => {
+  return (left: IBaseToken | ISqlAdapter | IPrimitiveValue) =>
+    notMatch(left, right);
+};
+
+export const regexp = (
+  left: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue
+) => {
+  return binaryOperator("REGEXP", left, right);
+};
+export const regexp$ = (right: IBaseToken | ISqlAdapter | IPrimitiveValue) => {
+  return (left: IBaseToken | ISqlAdapter | IPrimitiveValue) =>
+    regexp(left, right);
+};
+
+export const notRegexp = (
+  left: IBaseToken | ISqlAdapter | IPrimitiveValue,
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue
+) => {
+  return binaryOperator("NOT REGEXP", left, right);
+};
+export const notRegexp$ = (
+  right: IBaseToken | ISqlAdapter | IPrimitiveValue
+) => {
+  return (left: IBaseToken | ISqlAdapter | IPrimitiveValue) =>
+    notRegexp(left, right);
 };
 
 const performLike = (

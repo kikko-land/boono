@@ -3,7 +3,7 @@ import { isTable } from "@kikko-land/sql";
 
 import { IBaseToken, isToken, TokenType } from "../types";
 import { alias } from "./alias";
-import { conditionValuesToToken, IConditionValue } from "./binary";
+import { conditionValuesToToken, IConditionValue } from "./exprs/binary";
 import { toToken } from "./rawSql";
 import { ISelectStatement } from "./statements/select";
 import { wrapParentheses } from "./utils";

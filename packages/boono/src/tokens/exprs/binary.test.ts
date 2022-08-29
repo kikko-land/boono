@@ -1,7 +1,16 @@
 import { sql } from "@kikko-land/sql";
 import { describe, expect, it } from "vitest";
 
-import { like, notLike } from "./binary";
+import {
+  glob,
+  like,
+  match,
+  notGlob,
+  notLike,
+  notMatch,
+  notRegexp,
+  regexp,
+} from "./binary";
 
 describe("binary", () => {
   it("builds LIKE", () => {
@@ -29,6 +38,26 @@ describe("binary", () => {
     ).toEqual({
       text: `"author" NOT LIKE ?`,
       values: ["%James%"],
+    });
+  });
+
+  [
+    { name: "GLOB", func: glob, notFunc: notGlob },
+    { name: "MATCH", func: match, notFunc: notMatch },
+    { name: "REGEXP", func: regexp, notFunc: notRegexp },
+  ].forEach(({ name, func, notFunc }) => {
+    it(`builds ${name}`, () => {
+      expect(func(sql.ident("author"), "James").toSql().preparedQuery).toEqual({
+        text: `"author" ${name} ?`,
+        values: ["James"],
+      });
+
+      expect(
+        notFunc(sql.ident("author"), "James").toSql().preparedQuery
+      ).toEqual({
+        text: `"author" NOT ${name} ?`,
+        values: ["James"],
+      });
     });
   });
 });
