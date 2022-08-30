@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 
 import { alias } from "../alias";
 import { and, eq$, gtEq, gtEq$, like$, or } from "../exprs/binary";
+import { not } from "../exprs/unary";
 import { asc, desc } from "../order";
-import { not } from "../unary";
 import { windowBody, windowFn } from "../windowFn";
 import { select } from "./select";
 

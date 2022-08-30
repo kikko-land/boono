@@ -1,7 +1,11 @@
 import { ISql } from "@kikko-land/sql";
 
 export enum TokenType {
-  Func = "Func",
+  Raise = "Raise",
+  Case = "Case",
+  Exists = "Exists",
+  Is = "Is",
+  Collate = "Collate",
   Cast = "Cast",
   Binary = "Binary",
   Between = "Between",

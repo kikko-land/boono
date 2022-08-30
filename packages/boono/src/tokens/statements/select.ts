@@ -303,7 +303,7 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
                 sql.join(
                   this.__state.definedWindowFunctions.map(
                     ({ name, windowBody }) =>
-                      sql`${sql.stripIdent(name)} AS (${windowBody})`
+                      sql`${sql.strip(name)} AS (${windowBody})`
                   ),
                   ", "
                 ),

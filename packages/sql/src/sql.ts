@@ -273,7 +273,7 @@ sql.escapeString = (val: string) => {
 sql.raw = (value: string) => {
   return sql([value]);
 };
-sql.stripIdent = (str: string) => {
+sql.strip = (str: string) => {
   return sql.raw(str.replace(/[^a-zA-Z0-9]+/g, ""));
 };
 sql.ident = (str: string) => {

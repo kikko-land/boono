@@ -117,7 +117,7 @@ export const windowBody = (): IWindowBodyClause => {
       return sql.join(
         [
           this.__state.baseWindowName
-            ? sql.stripIdent(this.__state.baseWindowName)
+            ? sql.strip(this.__state.baseWindowName)
             : sql.empty,
           this.__state.partitionByValues.length > 0
             ? sql`PARTITION BY ${sql.join(

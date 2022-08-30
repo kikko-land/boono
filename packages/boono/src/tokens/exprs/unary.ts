@@ -23,3 +23,14 @@ export const not = (
     },
   };
 };
+
+if (import.meta.vitest) {
+  const { it, expect } = import.meta.vitest;
+
+  it("works", () => {
+    expect(not(sql`5 = 6`).toSql().preparedQuery).toEqual({
+      text: "NOT (5 = 6)",
+      values: [],
+    });
+  });
+}

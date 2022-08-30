@@ -4,7 +4,6 @@ import { IBaseToken, isToken, TokenType } from "../../types";
 import { toToken } from "../rawSql";
 import { wrapParentheses } from "../utils";
 
-// TODO: in null support
 export interface IBinaryOperator extends IBaseToken<TokenType.Binary> {
   __state: {
     operator:
