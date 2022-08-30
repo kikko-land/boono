@@ -10,10 +10,10 @@ import { toToken } from "./rawSql";
 import { wrapParentheses } from "./utils";
 
 export type IAliasToken = IBaseToken<TokenType.Alias> & {
-  __state: {
+  readonly __state: Readonly<{
     left: IBaseToken;
     right: string;
-  };
+  }>;
 };
 
 export const alias = (

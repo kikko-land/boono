@@ -6,21 +6,21 @@ import { wrapParentheses } from "./utils";
 
 export interface ILimitOffsetTerm
   extends IBaseToken<TokenType.LimitOffsetTerm> {
-  __state: {
+  readonly __state: Readonly<{
     limitValue?: IBaseToken;
     offsetValue?: IBaseToken;
-  };
+  }>;
 }
 
 export interface ILimitOffsetTrait {
-  __state: {
+  readonly __state: Readonly<{
     limitOffsetValue: ILimitOffsetTerm;
-  };
+  }>;
 
-  limit: typeof limit;
-  offset: typeof offset;
-  withoutLimit: typeof withoutLimit;
-  withoutOffset: typeof withoutOffset;
+  readonly limit: typeof limit;
+  readonly offset: typeof offset;
+  readonly withoutLimit: typeof withoutLimit;
+  readonly withoutOffset: typeof withoutOffset;
 }
 
 export const buildInitialLimitOffset = (): ILimitOffsetTerm => {

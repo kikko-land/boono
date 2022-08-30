@@ -5,7 +5,7 @@ import { toToken } from "../rawSql";
 import { wrapParentheses } from "../utils";
 
 export interface IBinaryOperator extends IBaseToken<TokenType.Binary> {
-  __state: {
+  readonly __state: Readonly<{
     operator:
       | "<"
       | "<="
@@ -28,7 +28,7 @@ export interface IBinaryOperator extends IBaseToken<TokenType.Binary> {
     left: IBaseToken;
     right: IBaseToken | IBaseToken[];
     escape?: string | undefined;
-  };
+  }>;
 }
 
 export const isBinaryOperator = (t: unknown): t is IBinaryOperator => {
@@ -278,12 +278,14 @@ export const notIn$ = (
 export type IConditionValue =
   | IBaseToken
   | ISqlAdapter
-  | Record<
-      string,
-      | ((left: IBaseToken | ISqlAdapter | IPrimitiveValue) => IBaseToken)
-      | IBaseToken
-      | ISqlAdapter
-      | IPrimitiveValue
+  | Readonly<
+      Record<
+        string,
+        | ((left: IBaseToken | ISqlAdapter | IPrimitiveValue) => IBaseToken)
+        | IBaseToken
+        | ISqlAdapter
+        | IPrimitiveValue
+      >
     >;
 
 export const conditionValuesToToken = (values: IConditionValue[]) => {

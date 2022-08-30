@@ -5,13 +5,13 @@ import { alias } from "./alias";
 import { toToken } from "./rawSql";
 import { ISelectStatement } from "./statements/select";
 
-type IReturnValue = {
+type IReturnValue = Readonly<{
   toSelect: "*" | string | ISelectStatement | IBaseToken;
   alias?: string;
-};
+}>;
 export interface IReturningClause extends IBaseToken<TokenType.Returning> {
-  __state: {
-    values: IReturnValue[];
+  readonly __state: {
+    readonly values: IReturnValue[];
   };
 }
 
@@ -23,12 +23,12 @@ type IReturningArg =
   | { [key: string]: ISqlAdapter | string | ISelectStatement };
 
 export interface IReturningTrait {
-  __state: {
+  readonly __state: Readonly<{
     returningValue: IReturningClause;
-  };
+  }>;
 
-  returning: typeof returningTrait;
-  withoutReturning: typeof withoutReturningTrait;
+  readonly returning: typeof returningTrait;
+  readonly withoutReturning: typeof withoutReturningTrait;
 }
 
 export const returning = (...args: IReturningArg[]): IReturningClause => {

@@ -3,10 +3,10 @@ import { IPrimitiveValue, ISqlAdapter, sql } from "@kikko-land/sql";
 import { IBaseToken, TokenType } from "../../types";
 
 export interface IExistsOperator extends IBaseToken<TokenType.Exists> {
-  __state: {
+  readonly __state: Readonly<{
     not: boolean;
     right: IBaseToken | ISqlAdapter | IPrimitiveValue;
-  };
+  }>;
 }
 
 const performExists = (

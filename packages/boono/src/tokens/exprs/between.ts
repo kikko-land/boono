@@ -5,12 +5,12 @@ import { toToken } from "../rawSql";
 import { wrapParentheses } from "../utils";
 
 export interface IBetweenOperator extends IBaseToken<TokenType.Between> {
-  __state: {
+  readonly __state: Readonly<{
     base: IBaseToken | ISqlAdapter | IPrimitiveValue;
     left: IBaseToken | ISqlAdapter | IPrimitiveValue;
     right: IBaseToken | ISqlAdapter | IPrimitiveValue;
     not: boolean;
-  };
+  }>;
 }
 
 const buildBetween = (

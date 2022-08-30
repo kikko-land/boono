@@ -12,11 +12,11 @@ import {
 import { toToken } from "./rawSql";
 
 export interface IWindowClause extends IBaseToken<TokenType.WindowFn> {
-  __state: {
+  readonly __state: Readonly<{
     fn: ISqlAdapter;
     filterValue?: IBaseToken<TokenType>;
     overValue?: IBaseToken<TokenType.WindowBody>;
-  };
+  }>;
 
   filter(...values: IConditionValue[]): this;
   over(arg?: IBaseToken<TokenType>): this;
@@ -70,12 +70,12 @@ export const windowFn = (fn: ISqlAdapter | IBaseToken): IWindowClause => {
 export interface IWindowBodyClause
   extends IBaseToken<TokenType.WindowBody>,
     IOrderTrait {
-  __state: {
+  readonly __state: Readonly<{
     partitionByValues: (IBaseToken | ISql | string)[];
     baseWindowName?: string;
     ordersBox: IOrdersBoxTerm;
     frameValue?: IBaseToken | ISql;
-  };
+  }>;
   fromBase(name: string): this;
   partitionBy(partitionBy: IBaseToken | ISql | string): this;
   withoutPartitionBy(): this;

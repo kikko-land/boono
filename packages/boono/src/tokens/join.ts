@@ -9,32 +9,33 @@ import { ISelectStatement } from "./statements/select";
 import { wrapParentheses } from "./utils";
 
 type IJoinOperator =
-  | {
+  | Readonly<{
       joinType: "CROSS";
-    }
-  | ({
+    }>
+  | (Readonly<{
       isNatural: boolean;
-    } & (
-      | {
-          joinType: "LEFT" | "RIGHT" | "FULL";
-          isOuter: boolean;
-        }
-      | {
-          joinType: "INNER";
-        }
-      // eslint-disable-next-line @typescript-eslint/ban-types
-      | {}
-    ));
+    }> &
+      (
+        | Readonly<{
+            joinType: "LEFT" | "RIGHT" | "FULL";
+            isOuter: boolean;
+          }>
+        | Readonly<{
+            joinType: "INNER";
+          }>
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        | Readonly<{}>
+      ));
 
 export interface IJoinExpr extends IBaseToken<TokenType.Join> {
-  __state: {
+  readonly __state: Readonly<{
     operator?: IJoinOperator;
     toJoin:
       | IContainsTable
       | IBaseToken
-      | { toSelect: IBaseToken; alias: string };
+      | Readonly<{ toSelect: IBaseToken; alias: string }>;
     on?: IConditionValue;
-  };
+  }>;
 }
 
 const baseJoin = (
@@ -117,35 +118,35 @@ export type IToJoinArg =
   | { [key: string]: ISqlAdapter | ISelectStatement | string };
 
 export interface IJoinToTrait {
-  __state: {
+  readonly __state: Readonly<{
     joinValues: IJoinExpr[];
-  };
+  }>;
 
-  join: typeof join;
+  readonly join: typeof join;
 
-  withoutJoin: typeof withoutJoin;
+  readonly withoutJoin: typeof withoutJoin;
 
-  joinCross: typeof joinCross;
+  readonly joinCross: typeof joinCross;
 
-  joinNatural: typeof joinNatural;
+  readonly joinNatural: typeof joinNatural;
 
-  joinLeft: typeof joinLeft;
-  joinLeftOuter: typeof joinLeftOuter;
-  joinLeftNatural: typeof joinLeftNatural;
-  joinLeftNaturalOuter: typeof joinLeftNaturalOuter;
+  readonly joinLeft: typeof joinLeft;
+  readonly joinLeftOuter: typeof joinLeftOuter;
+  readonly joinLeftNatural: typeof joinLeftNatural;
+  readonly joinLeftNaturalOuter: typeof joinLeftNaturalOuter;
 
-  joinRight: typeof joinRight;
-  joinRightOuter: typeof joinRightOuter;
-  joinRightNatural: typeof joinRightNatural;
-  joinRightNaturalOuter: typeof joinRightNaturalOuter;
+  readonly joinRight: typeof joinRight;
+  readonly joinRightOuter: typeof joinRightOuter;
+  readonly joinRightNatural: typeof joinRightNatural;
+  readonly joinRightNaturalOuter: typeof joinRightNaturalOuter;
 
-  joinFull: typeof joinFull;
-  joinFullOuter: typeof joinFullOuter;
-  joinFullNatural: typeof joinFullNatural;
-  joinFullNaturalOuter: typeof joinFullNaturalOuter;
+  readonly joinFull: typeof joinFull;
+  readonly joinFullOuter: typeof joinFullOuter;
+  readonly joinFullNatural: typeof joinFullNatural;
+  readonly joinFullNaturalOuter: typeof joinFullNaturalOuter;
 
-  joinInner: typeof joinInner;
-  joinInnerNatural: typeof joinInnerNatural;
+  readonly joinInner: typeof joinInner;
+  readonly joinInnerNatural: typeof joinInnerNatural;
 }
 
 export function join<T extends IJoinToTrait>(

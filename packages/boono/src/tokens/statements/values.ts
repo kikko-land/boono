@@ -31,12 +31,14 @@ export interface IValuesStatement
     ICompoundTrait,
     ILimitOffsetTrait,
     ICTETrait {
-  __state: {
-    values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[][];
-  } & IOrderTrait["__state"] &
-    ICompoundTrait["__state"] &
-    ILimitOffsetTrait["__state"] &
-    ICTETrait["__state"];
+  readonly __state: Readonly<
+    {
+      values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[][];
+    } & IOrderTrait["__state"] &
+      ICompoundTrait["__state"] &
+      ILimitOffsetTrait["__state"] &
+      ICTETrait["__state"]
+  >;
 }
 
 export const values = (

@@ -6,27 +6,27 @@ import { ISelectStatement } from "./statements/select";
 import { IValuesStatement } from "./statements/values";
 
 export interface ICTETerm extends IBaseToken<TokenType.CTE> {
-  __state: {
+  readonly __state: Readonly<{
     recursive: boolean;
-    values: {
+    values: Readonly<{
       table: string;
       columns: string[];
       select:
         | ISelectStatement
         | IValuesStatement
         | IBaseToken<TokenType.RawSql>;
-    }[];
-  };
+    }>[];
+  }>;
 }
 
 export interface ICTETrait {
-  __state: {
+  readonly __state: Readonly<{
     cteValue?: ICTETerm;
-  };
+  }>;
 
-  with: typeof With;
-  withRecursive: typeof withRecursive;
-  withoutWith: typeof withoutWith;
+  readonly with: typeof With;
+  readonly withRecursive: typeof withRecursive;
+  readonly withoutWith: typeof withoutWith;
 }
 
 const cteTerm = (args: {

@@ -4,11 +4,11 @@ import { IBaseToken, TokenType } from "../types";
 import { toToken } from "./rawSql";
 
 export interface IOrderTerm extends IBaseToken<TokenType.OrderTerm> {
-  __state: {
+  readonly __state: Readonly<{
     orderType: "DESC" | "ASC";
     val: IBaseToken | string;
     nullOrder?: "NULLS FIRST" | "NULLS LAST";
-  };
+  }>;
 }
 
 const orderTerm = (
@@ -39,9 +39,9 @@ const orderTerm = (
 };
 
 export interface IOrdersBoxTerm extends IBaseToken<TokenType.OrdersBoxTerm> {
-  __state: {
+  readonly __state: Readonly<{
     values: IOrderTerm[];
-  };
+  }>;
 }
 
 export const orderBy = (...args: IOrderTerm[]): IOrdersBoxTerm => {
@@ -73,12 +73,12 @@ export const asc = (
 };
 
 export interface IOrderTrait {
-  __state: {
+  readonly __state: Readonly<{
     ordersBox: IOrdersBoxTerm;
-  };
+  }>;
 
-  orderBy: typeof orderByTrait;
-  withoutOrder: typeof withoutOrderTrait;
+  readonly orderBy: typeof orderByTrait;
+  readonly withoutOrder: typeof withoutOrderTrait;
 }
 
 export function orderByTrait<T extends IOrderTrait>(

@@ -6,15 +6,15 @@ import { toToken } from "./rawSql";
 import { wrapParentheses } from "./utils";
 
 export interface IFromTrait {
-  __state: {
-    fromValues: (
+  readonly __state: Readonly<{
+    fromValues: Readonly<
       | IContainsTable
       | IBaseToken
       | { select: IContainsTable | IBaseToken; alias: string }
-    )[];
-  };
+    >[];
+  }>;
 
-  from: typeof from;
+  readonly from: typeof from;
 }
 
 export function from<T extends IFromTrait>(

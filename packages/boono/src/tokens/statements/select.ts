@@ -68,28 +68,30 @@ export interface ISelectStatement
     IWhereTrait,
     IFromTrait,
     IJoinToTrait {
-  __state: {
-    definedWindowFunctions: {
-      name: string;
-      windowBody: IBaseToken<TokenType.WindowBody>;
-    }[];
+  readonly __state: Readonly<
+    {
+      definedWindowFunctions: Readonly<{
+        name: string;
+        windowBody: IBaseToken<TokenType.WindowBody>;
+      }>[];
 
-    distinctValue: boolean;
+      distinctValue: boolean;
 
-    selectValues: {
-      toSelect: "*" | string | ISelectStatement | IBaseToken;
-      alias?: string;
-    }[];
+      selectValues: Readonly<{
+        toSelect: "*" | string | ISelectStatement | IBaseToken;
+        alias?: string;
+      }>[];
 
-    groupByValues: (IBaseToken | string)[];
-    havingValue?: IBaseToken;
-  } & IFromTrait["__state"] &
-    ILimitOffsetTrait["__state"] &
-    ICTETrait["__state"] &
-    IJoinToTrait["__state"] &
-    IOrderTrait["__state"] &
-    ICompoundTrait["__state"] &
-    IWhereTrait["__state"];
+      groupByValues: (IBaseToken | string)[];
+      havingValue?: IBaseToken;
+    } & IFromTrait["__state"] &
+      ILimitOffsetTrait["__state"] &
+      ICTETrait["__state"] &
+      IJoinToTrait["__state"] &
+      IOrderTrait["__state"] &
+      ICompoundTrait["__state"] &
+      IWhereTrait["__state"]
+  >;
 
   defineWindow(
     name: string,
@@ -110,7 +112,7 @@ type ISelectArgType =
   | ISqlAdapter
   | ISelectStatement
   | IValuesStatement
-  | { [key: string]: ISqlAdapter | string | ISelectStatement }
+  | Readonly<{ [key: string]: ISqlAdapter | string | ISelectStatement }>
   | IBaseToken;
 
 const selectArgsToValues = (

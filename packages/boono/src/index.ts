@@ -10,6 +10,5 @@ export * from "./tokens/statements/insert";
 export * from "./tokens/statements/select";
 export * from "./tokens/statements/update";
 export * from "./tokens/statements/values";
-export * from "./tokens/unary";
 export * from "./tokens/utils";
 export * from "@kikko-land/sql";

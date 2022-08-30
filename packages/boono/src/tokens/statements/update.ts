@@ -50,14 +50,14 @@ import { ISelectStatement } from "./select";
 import { IValuesStatement } from "./values";
 
 type ISetValue =
-  | {
+  | Readonly<{
       columnName: string;
       toSet:
         | IBaseToken<TokenType.RawSql>
         | IPrimitiveValue
         | ISelectStatement
         | IValuesStatement;
-    }
+    }>
   | IBaseToken<TokenType.RawSql>;
 
 export interface IUpdateStatement
@@ -68,29 +68,31 @@ export interface IUpdateStatement
     IReturningTrait,
     IOrReplaceTokenTrait,
     IJoinToTrait {
-  __state: {
-    updateTable: IContainsTable;
-    setValues: ISetValue[];
-  } & IFromTrait["__state"] &
-    IOrReplaceTokenTrait["__state"] &
-    IJoinToTrait["__state"] &
-    IReturningTrait["__state"] &
-    ICTETrait["__state"] &
-    IWhereTrait["__state"];
+  readonly __state: Readonly<
+    {
+      updateTable: IContainsTable;
+      setValues: ISetValue[];
+    } & IFromTrait["__state"] &
+      IOrReplaceTokenTrait["__state"] &
+      IJoinToTrait["__state"] &
+      IReturningTrait["__state"] &
+      ICTETrait["__state"] &
+      IWhereTrait["__state"]
+  >;
 
   set(...args: ISetArgType[]): IUpdateStatement;
 }
 
 type ISetArgType =
   | ISqlAdapter
-  | {
+  | Readonly<{
       [key: string]:
         | ISqlAdapter
         | IBaseToken<TokenType.RawSql>
         | IPrimitiveValue
         | ISelectStatement
         | IValuesStatement;
-    }
+    }>
   | IBaseToken<TokenType.RawSql>;
 
 export const update = (tbl: string | IContainsTable): IUpdateStatement => {

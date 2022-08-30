@@ -15,11 +15,13 @@ export interface IDeleteStatement
     ICTETrait,
     IWhereTrait,
     IReturningTrait {
-  __state: {
-    deleteTable: IContainsTable;
-  } & IReturningTrait["__state"] &
-    ICTETrait["__state"] &
-    IWhereTrait["__state"];
+  readonly __state: Readonly<
+    {
+      deleteTable: IContainsTable;
+    } & IReturningTrait["__state"] &
+      ICTETrait["__state"] &
+      IWhereTrait["__state"]
+  >;
 }
 
 export const deleteFrom = (tbl: string | IContainsTable): IDeleteStatement => {

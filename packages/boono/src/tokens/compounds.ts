@@ -8,20 +8,23 @@ import { isValues, IValuesStatement } from "./statements/values";
 type IUnionArg = ISelectStatement | IValuesStatement | ISql;
 
 export interface ICompoundOperator extends IBaseToken<TokenType.OrderTerm> {
-  compoundType: "UNION" | "UNION ALL" | "INTERSECT" | "EXCEPT";
-  value: ISelectStatement | IValuesStatement | IBaseToken<TokenType.RawSql>;
+  readonly compoundType: "UNION" | "UNION ALL" | "INTERSECT" | "EXCEPT";
+  readonly value:
+    | ISelectStatement
+    | IValuesStatement
+    | IBaseToken<TokenType.RawSql>;
 }
 
 export interface ICompoundTrait {
-  __state: {
+  readonly __state: Readonly<{
     compoundValues: ICompoundOperator[];
-  };
+  }>;
 
-  union: typeof union;
-  unionAll: typeof unionAll;
-  intersect: typeof intersect;
-  except: typeof except;
-  withoutCompound: typeof withoutCompound;
+  readonly union: typeof union;
+  readonly unionAll: typeof unionAll;
+  readonly intersect: typeof intersect;
+  readonly except: typeof except;
+  readonly withoutCompound: typeof withoutCompound;
 }
 
 const makeCompounds = <T extends ICompoundTrait>(

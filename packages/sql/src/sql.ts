@@ -76,7 +76,7 @@ export interface ISql extends ISqlAdapter {
 
 function internalSql(
   _rawStrings: ReadonlyArray<string>,
-  _rawValues: IRawValue[]
+  _rawValues: readonly IRawValue[]
 ): ISql {
   if (_rawStrings.length - 1 !== _rawValues.length) {
     if (_rawStrings.length === 0) {
@@ -284,7 +284,7 @@ sql.isTable = isTable;
 sql.isSql = isSql;
 sql.empty = sql.raw("");
 sql.join = (
-  values: IRawValue[],
+  values: readonly IRawValue[],
   separator = ", ",
   prefix = "",
   suffix = ""

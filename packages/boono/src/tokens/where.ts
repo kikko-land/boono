@@ -9,12 +9,12 @@ import {
 import { IUnaryOperator } from "./exprs/unary";
 
 export interface IWhereTrait {
-  __state: {
+  readonly __state: Readonly<{
     whereValue?: IBaseToken | IBinaryOperator | IUnaryOperator;
-  };
+  }>;
 
-  where: typeof where;
-  orWhere: typeof orWhere;
+  readonly where: typeof where;
+  readonly orWhere: typeof orWhere;
 }
 
 const constructWhere = function<T extends IWhereTrait>(

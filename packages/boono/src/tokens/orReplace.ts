@@ -1,13 +1,13 @@
 export interface IOrReplaceTokenTrait {
-  __state: {
+  readonly __state: Readonly<{
     orReplaceValue?: "ABORT" | "FAIL" | "IGNORE" | "REPLACE" | "ROLLBACK";
-  };
+  }>;
 
-  orAbort: typeof orAbort;
-  orFail: typeof orFail;
-  orIgnore: typeof orIgnore;
-  orReplace: typeof orReplace;
-  orRollback: typeof orRollback;
+  readonly orAbort: typeof orAbort;
+  readonly orFail: typeof orFail;
+  readonly orIgnore: typeof orIgnore;
+  readonly orReplace: typeof orReplace;
+  readonly orRollback: typeof orRollback;
 }
 
 export function orAbort<T extends IOrReplaceTokenTrait>(this: T): T {

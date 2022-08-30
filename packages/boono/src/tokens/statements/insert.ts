@@ -31,17 +31,22 @@ export interface IInsertStatement
     ICTETrait,
     IReturningTrait,
     IOrReplaceTokenTrait {
-  __state: {
-    intoTable?: string | IContainsTable;
-    columnNames: string[];
+  readonly __state: Readonly<
+    {
+      intoTable?: string | IContainsTable;
+      columnNames: string[];
 
-    toInsertValue?:
-      | IValuesStatement
-      | ISelectStatement
-      | { columnName: string; value: IPrimitiveValue | IBaseToken }[][];
-  } & ICTETrait["__state"] &
-    IReturningTrait["__state"] &
-    IOrReplaceTokenTrait["__state"];
+      toInsertValue?:
+        | IValuesStatement
+        | ISelectStatement
+        | Readonly<{
+            columnName: string;
+            value: IPrimitiveValue | IBaseToken;
+          }>[][];
+    } & ICTETrait["__state"] &
+      IReturningTrait["__state"] &
+      IOrReplaceTokenTrait["__state"]
+  >;
 
   setColumnNames(columnNames: string[]): IInsertStatement;
   withoutColumnNames(): IInsertStatement;

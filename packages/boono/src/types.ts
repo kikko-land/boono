@@ -30,7 +30,7 @@ export enum TokenType {
 }
 
 export interface IBaseToken<T extends TokenType = TokenType> {
-  type: T;
+  readonly type: T;
   toSql(): ISql;
 }
 
