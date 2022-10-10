@@ -1,6 +1,6 @@
 {
   "name": "@kikko-land/boono",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "author": "Sergey Popov",
   "license": "MIT",
   "homepage": "https://boono.netlify.app",
@@ -23,7 +23,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@kikko-land/boono-sql": "^0.1.1"
+    "@kikko-land/boono-sql": "^0.2.0"
   },
   "devDependencies": {
     "@kikko-land/common-scripts": "^0.1.1",
