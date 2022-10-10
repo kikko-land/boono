@@ -1,28 +1,36 @@
 import { IContainsTable, sql } from "@kikko-land/sql";
 
 import { IBaseToken, TokenType } from "../../types";
-import { ICTEState, With, withoutWith, withRecursive } from "../cte";
+import { ICTETrait, With, withoutWith, withRecursive } from "../cte";
 import {
-  IReturningState,
+  IReturningTrait,
   returning,
-  returningForState,
-  withoutReturningForState,
+  returningTrait,
+  withoutReturningTrait,
 } from "../returning";
-import { IWhereState, orWhere, where } from "../where";
+import { IWhereTrait, orWhere, where } from "../where";
 
 export interface IDeleteStatement
   extends IBaseToken<TokenType.Delete>,
-    ICTEState,
-    IWhereState,
-    IReturningState {
-  _deleteTable: IContainsTable;
+    ICTETrait,
+    IWhereTrait,
+    IReturningTrait {
+  readonly __state: Readonly<
+    {
+      deleteTable: IContainsTable;
+    } & IReturningTrait["__state"] &
+      ICTETrait["__state"] &
+      IWhereTrait["__state"]
+  >;
 }
 
 export const deleteFrom = (tbl: string | IContainsTable): IDeleteStatement => {
   return {
     type: TokenType.Delete,
-    _deleteTable: typeof tbl === "string" ? sql.table(tbl) : tbl,
-    _returningValue: returning(),
+    __state: {
+      deleteTable: typeof tbl === "string" ? sql.table(tbl) : tbl,
+      returningValue: returning(),
+    },
 
     with: With,
     withoutWith,
@@ -31,16 +39,18 @@ export const deleteFrom = (tbl: string | IContainsTable): IDeleteStatement => {
     where,
     orWhere,
 
-    returning: returningForState,
-    withoutReturning: withoutReturningForState,
+    returning: returningTrait,
+    withoutReturning: withoutReturningTrait,
 
     toSql() {
       return sql.join(
         [
-          this._cteValue ? this._cteValue : null,
-          sql`DELETE FROM ${this._deleteTable}`,
-          this._whereValue ? sql`WHERE ${this._whereValue}` : null,
-          this._returningValue,
+          this.__state.cteValue ? this.__state.cteValue : null,
+          sql`DELETE FROM ${this.__state.deleteTable}`,
+          this.__state.whereValue
+            ? sql`WHERE ${this.__state.whereValue}`
+            : null,
+          this.__state.returningValue,
         ].filter((v) => v),
         " "
       );

@@ -1,7 +1,14 @@
 import { ISql } from "@kikko-land/sql";
 
 export enum TokenType {
+  Raise = "Raise",
+  Case = "Case",
+  Exists = "Exists",
+  Is = "Is",
+  Collate = "Collate",
+  Cast = "Cast",
   Binary = "Binary",
+  Between = "Between",
   Unary = "Unary",
   Alias = "Alias",
   Compound = "Compound",
@@ -20,10 +27,12 @@ export enum TokenType {
   Returning = "Returning",
   WindowFn = "WindowFn",
   WindowBody = "WindowBody",
+  ConflictedColumns = "ConflictedColumns",
+  Do = "DO",
 }
 
 export interface IBaseToken<T extends TokenType = TokenType> {
-  type: T;
+  readonly type: T;
   toSql(): ISql;
 }
 

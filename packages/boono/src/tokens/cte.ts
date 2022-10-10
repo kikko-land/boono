@@ -6,20 +6,27 @@ import { ISelectStatement } from "./statements/select";
 import { IValuesStatement } from "./statements/values";
 
 export interface ICTETerm extends IBaseToken<TokenType.CTE> {
-  _recursive: boolean;
-  _values: {
-    table: string;
-    columns: string[];
-    select: ISelectStatement | IValuesStatement | IBaseToken<TokenType.RawSql>;
-  }[];
+  readonly __state: Readonly<{
+    recursive: boolean;
+    values: Readonly<{
+      table: string;
+      columns: string[];
+      select:
+        | ISelectStatement
+        | IValuesStatement
+        | IBaseToken<TokenType.RawSql>;
+    }>[];
+  }>;
 }
 
-export interface ICTEState {
-  _cteValue?: ICTETerm;
+export interface ICTETrait {
+  readonly __state: Readonly<{
+    cteValue?: ICTETerm;
+  }>;
 
-  with: typeof With;
-  withRecursive: typeof withRecursive;
-  withoutWith: typeof withoutWith;
+  readonly with: typeof With;
+  readonly withRecursive: typeof withRecursive;
+  readonly withoutWith: typeof withoutWith;
 }
 
 const cteTerm = (args: {
@@ -30,24 +37,26 @@ const cteTerm = (args: {
 }): ICTETerm => {
   return {
     type: TokenType.CTE,
-    _recursive: args.recursive,
-    _values: [
-      {
-        table: args.table,
-        columns: args.columns,
-        select: args.select,
-      },
-    ],
+    __state: {
+      recursive: args.recursive,
+      values: [
+        {
+          table: args.table,
+          columns: args.columns,
+          select: args.select,
+        },
+      ],
+    },
     toSql() {
       return sql.join(
         [
           sql`WITH`,
-          this._recursive ? sql`RECURSIVE` : null,
+          this.__state.recursive ? sql`RECURSIVE` : null,
           sql.join(
-            this._values.map(
+            this.__state.values.map(
               (v) =>
-                sql`${sql.liter(v.table)}(${sql.join(
-                  v.columns.map(sql.liter)
+                sql`${sql.ident(v.table)}(${sql.join(
+                  v.columns.map(sql.ident)
                 )}) AS (${v.select})`
             )
           ),
@@ -58,8 +67,8 @@ const cteTerm = (args: {
   };
 };
 
-const cteTermState = <T extends ICTEState>(
-  state: T,
+const cteTermToken = <T extends ICTETrait>(
+  current: T,
   args: {
     table: string;
     columns: string[];
@@ -67,20 +76,38 @@ const cteTermState = <T extends ICTEState>(
     select: ISelectStatement | IValuesStatement | ISql;
   }
 ): T => {
-  if (state._cteValue?._recursive === true && args.recursive === false) {
+  if (
+    current.__state.cteValue?.__state.recursive === true &&
+    args.recursive === false
+  ) {
     throw new Error("WITH is already recursive");
   }
 
-  if (state._cteValue?._recursive === false && args.recursive === true) {
+  if (
+    current.__state.cteValue?.__state.recursive === false &&
+    args.recursive === true
+  ) {
     throw new Error("WITH is not recursive");
   }
 
-  return {
-    ...state,
-    _cteValue: state._cteValue
+  const newState: ICTETrait["__state"] = {
+    ...current.__state,
+    cteValue: current.__state.cteValue
       ? {
-          ...state._cteValue,
-          values: [...state._cteValue._values, {}],
+          ...current.__state.cteValue,
+          __state: {
+            ...current.__state.cteValue.__state,
+            values: [
+              ...current.__state.cteValue.__state.values,
+              {
+                table: args.table,
+                columns: args.columns,
+                select: sql.isSql(args.select)
+                  ? buildRawSql(args.select)
+                  : args.select,
+              },
+            ],
+          },
         }
       : cteTerm({
           table: args.table,
@@ -91,9 +118,14 @@ const cteTermState = <T extends ICTEState>(
             : args.select,
         }),
   };
+
+  return {
+    ...current,
+    __state: newState,
+  };
 };
 
-export function With<T extends ICTEState>(
+export function With<T extends ICTETrait>(
   this: T,
   args: {
     table: string;
@@ -101,10 +133,10 @@ export function With<T extends ICTEState>(
     select: ISelectStatement | IValuesStatement | ISql;
   }
 ): T {
-  return cteTermState(this, { ...args, recursive: false });
+  return cteTermToken(this, { ...args, recursive: false });
 }
 
-export function withRecursive<T extends ICTEState>(
+export function withRecursive<T extends ICTETrait>(
   this: T,
   args: {
     table: string;
@@ -112,9 +144,14 @@ export function withRecursive<T extends ICTEState>(
     select: ISelectStatement | IValuesStatement | ISql;
   }
 ): T {
-  return cteTermState(this, { ...args, recursive: true });
+  return cteTermToken(this, { ...args, recursive: true });
 }
 
-export function withoutWith<T extends ICTEState>(this: T): T {
-  return { ...this, cteValue: undefined };
+export function withoutWith<T extends ICTETrait>(this: T): T {
+  const newState: ICTETrait["__state"] = {
+    ...this.__state,
+    cteValue: undefined,
+  };
+
+  return { ...this, __state: newState };
 }

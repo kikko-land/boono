@@ -25,12 +25,14 @@ const deleteRegex = /delete\s+from\s+/gim;
 const updateRegex = /update\s+(or\s+\w+\s+)?/gim;
 
 const strip = (str: string) => {
-  return str
-    // eslint-disable-next-line no-control-regex
-    .replace(/[^\u0001-\u007f]"/g, "")
-    .split(".")
-    .map((v) => '"' + v + '"')
-    .join(".");
+  return (
+    str
+      // eslint-disable-next-line no-control-regex
+      .replace(/[^\u0001-\u007f]"/g, "")
+      .split(".")
+      .map((v) => '"' + v + '"')
+      .join(".")
+  );
 };
 
 export interface ISqlAdapter {
@@ -74,20 +76,16 @@ export interface ISql extends ISqlAdapter {
 
 function internalSql(
   _rawStrings: ReadonlyArray<string>,
-  _rawValues: IRawValue[]
-
+  _rawValues: readonly IRawValue[]
 ): ISql {
-
-
   if (_rawStrings.length - 1 !== _rawValues.length) {
     if (_rawStrings.length === 0) {
       throw new TypeError("Expected at least 1 string");
     }
 
     throw new TypeError(
-      `Expected ${_rawStrings.length} strings to have ${
-        _rawStrings.length - 1
-      } values`
+      `Expected ${_rawStrings.length} strings to have ${_rawStrings.length -
+        1} values`
     );
   }
 
@@ -232,16 +230,53 @@ export function sql(
   rawStrings: ReadonlyArray<string>,
   ...rawValues: IRawValue[]
 ): ISql {
-  return internalSql(rawStrings, rawValues)
+  return internalSql(rawStrings, rawValues);
 }
 
+// Adopted from https://github.com/mysqljs/sqlstring/blob/master/lib/SqlString.js
+// eslint-disable-next-line no-control-regex
+const CHARS_GLOBAL_REGEXP = /[\0\b\t\n\r\x1a"'\\]/g;
+const CHARS_ESCAPE_MAP = {
+  "\0": "\\0",
+  "\b": "\\b",
+  "\t": "\\t",
+  "\n": "\\n",
+  "\r": "\\r",
+  "\x1a": "\\Z",
+  '"': '\\"',
+  "'": "\\'",
+  "\\": "\\\\",
+} as const;
+sql.escapeString = (val: string) => {
+  let chunkIndex = (CHARS_GLOBAL_REGEXP.lastIndex = 0);
+  let escapedVal = "";
+  let match;
+
+  while ((match = CHARS_GLOBAL_REGEXP.exec(val))) {
+    escapedVal +=
+      val.slice(chunkIndex, match.index) +
+      CHARS_ESCAPE_MAP[match[0] as keyof typeof CHARS_ESCAPE_MAP];
+    chunkIndex = CHARS_GLOBAL_REGEXP.lastIndex;
+  }
+
+  if (chunkIndex === 0) {
+    // Nothing was escaped
+    return sql.raw("'" + val + "'");
+  }
+
+  if (chunkIndex < val.length) {
+    return sql.raw("'" + escapedVal + val.slice(chunkIndex) + "'");
+  }
+
+  return sql.raw("'" + escapedVal + "'");
+};
 sql.raw = (value: string) => {
   return sql([value]);
 };
 sql.strip = (str: string) => {
-  return sql.raw((str).replace(/[^a-zA-Z0-9]+/g, ''));
-}
-sql.liter = (str: string) => {
+  return sql.raw(str.replace(/[^a-zA-Z0-9]+/g, ""));
+};
+sql.ident = (str: string) => {
   return sql.raw(strip(str));
 };
 sql.table = table;
@@ -249,7 +284,7 @@ sql.isTable = isTable;
 sql.isSql = isSql;
 sql.empty = sql.raw("");
 sql.join = (
-  values: IRawValue[],
+  values: readonly IRawValue[],
   separator = ", ",
   prefix = "",
   suffix = ""

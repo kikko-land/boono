@@ -3,39 +3,42 @@ import { IPrimitiveValue, ISqlAdapter, sql } from "@kikko-land/sql";
 import { IBaseToken, TokenType } from "../../types";
 import {
   except,
-  ICompoundState,
+  ICompoundTrait,
   intersect,
   union,
   unionAll,
   withoutCompound,
 } from "../compounds";
-import { ICTEState, With, withoutWith, withRecursive } from "../cte";
+import { ICTETrait, With, withoutWith, withRecursive } from "../cte";
 import {
-  buildInitialLimitOffsetState,
-  ILimitOffsetState,
+  buildInitialLimitOffset,
+  ILimitOffsetTrait,
   limit,
   offset,
   withoutLimit,
   withoutOffset,
 } from "../limitOffset";
 import {
-  IOrdersBoxTerm,
-  IOrderState,
+  IOrderTrait,
   orderBy,
-  orderByForState,
-  withoutOrderForState,
+  orderByTrait,
+  withoutOrderTrait,
 } from "../order";
 
 export interface IValuesStatement
   extends IBaseToken<TokenType.Values>,
-    IOrderState,
-    ICompoundState,
-    ILimitOffsetState,
-    ICTEState {
-  __state: {
-    ordersBox: IOrdersBoxTerm;
-    values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[][];
-  };
+    IOrderTrait,
+    ICompoundTrait,
+    ILimitOffsetTrait,
+    ICTETrait {
+  readonly __state: Readonly<
+    {
+      values: (IBaseToken | ISqlAdapter | IPrimitiveValue)[][];
+    } & IOrderTrait["__state"] &
+      ICompoundTrait["__state"] &
+      ILimitOffsetTrait["__state"] &
+      ICTETrait["__state"]
+  >;
 }
 
 export const values = (
@@ -44,14 +47,14 @@ export const values = (
   return {
     type: TokenType.Values,
     __state: {
+      compoundValues: [],
       ordersBox: orderBy(),
       values: vals,
+      limitOffsetValue: buildInitialLimitOffset(),
     },
-    _compoundValues: [],
-    _limitOffsetValue: buildInitialLimitOffsetState(),
 
-    orderBy: orderByForState,
-    withoutOrder: withoutOrderForState,
+    orderBy: orderByTrait,
+    withoutOrder: withoutOrderTrait,
 
     union,
     unionAll,
@@ -70,17 +73,17 @@ export const values = (
     toSql() {
       return sql.join(
         [
-          this._cteValue ? this._cteValue : null,
+          this.__state.cteValue ? this.__state.cteValue : null,
           sql`VALUES ${sql.join(
             this.__state.values.map((val) => sql`(${sql.join(val)})`)
           )}`,
-          this._compoundValues.length > 0
-            ? sql.join(this._compoundValues, " ")
+          this.__state.compoundValues.length > 0
+            ? sql.join(this.__state.compoundValues, " ")
             : null,
           this.__state.ordersBox,
-          this._limitOffsetValue.toSql().isEmpty
+          this.__state.limitOffsetValue.toSql().isEmpty
             ? null
-            : this._limitOffsetValue,
+            : this.__state.limitOffsetValue,
         ].filter((v) => v),
         " "
       );

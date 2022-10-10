@@ -1,47 +1,54 @@
-import { IBaseToken, TokenType } from "../types";
+import { IBaseToken } from "../types";
 import {
   and,
   conditionValuesToToken,
   IBinaryOperator,
   IConditionValue,
   or,
-} from "./binary";
-import { IUnaryOperator } from "./unary";
+} from "./exprs/binary";
+import { IUnaryOperator } from "./exprs/unary";
 
-export interface IWhereState {
-  _whereValue?: IBaseToken<TokenType.RawSql> | IBinaryOperator | IUnaryOperator;
+export interface IWhereTrait {
+  readonly __state: Readonly<{
+    whereValue?: IBaseToken | IBinaryOperator | IUnaryOperator;
+  }>;
 
-  where: typeof where;
-  orWhere: typeof orWhere;
+  readonly where: typeof where;
+  readonly orWhere: typeof orWhere;
 }
 
-const constructWhere = function <T extends IWhereState>(
-  state: T,
+const constructWhere = function<T extends IWhereTrait>(
+  current: T,
   andOrOr: "and" | "or",
   values: IConditionValue[]
 ): T {
-  const finalValues = state._whereValue
-    ? [state._whereValue, ...conditionValuesToToken(values)]
+  const finalValues = current.__state.whereValue
+    ? [current.__state.whereValue, ...conditionValuesToToken(values)]
     : conditionValuesToToken(values);
 
-  if (finalValues.length > 1) {
-    return {
-      ...state,
-      _whereValue: andOrOr === "and" ? and(...finalValues) : or(...finalValues),
-    };
-  } else {
-    return { ...state, _whereValue: finalValues[0] };
-  }
+  const state: IWhereTrait["__state"] = (() => {
+    if (finalValues.length > 1) {
+      return {
+        ...current.__state,
+        whereValue:
+          andOrOr === "and" ? and(...finalValues) : or(...finalValues),
+      };
+    } else {
+      return { ...current.__state, whereValue: finalValues[0] };
+    }
+  })();
+
+  return { ...current, __state: state };
 };
 
-export function where<T extends IWhereState>(
+export function where<T extends IWhereTrait>(
   this: T,
   ...values: IConditionValue[]
 ): T {
   return constructWhere(this, "and", values);
 }
 
-export function orWhere<T extends IWhereState>(
+export function orWhere<T extends IWhereTrait>(
   this: T,
   ...values: IConditionValue[]
 ): T {

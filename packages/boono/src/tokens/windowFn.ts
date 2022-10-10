@@ -1,22 +1,22 @@
 import { ISql, ISqlAdapter, sql } from "@kikko-land/sql";
 
 import { IBaseToken, TokenType } from "../types";
-import { and, conditionValuesToToken, IConditionValue } from "./binary";
+import { and, conditionValuesToToken, IConditionValue } from "./exprs/binary";
 import {
   IOrdersBoxTerm,
-  IOrderState,
+  IOrderTrait,
   orderBy,
-  orderByForState,
-  withoutOrderForState,
+  orderByTrait,
+  withoutOrderTrait,
 } from "./order";
 import { toToken } from "./rawSql";
 
 export interface IWindowClause extends IBaseToken<TokenType.WindowFn> {
-  __state: {
+  readonly __state: Readonly<{
     fn: ISqlAdapter;
     filterValue?: IBaseToken<TokenType>;
     overValue?: IBaseToken<TokenType.WindowBody>;
-  };
+  }>;
 
   filter(...values: IConditionValue[]): this;
   over(arg?: IBaseToken<TokenType>): this;
@@ -69,13 +69,13 @@ export const windowFn = (fn: ISqlAdapter | IBaseToken): IWindowClause => {
 
 export interface IWindowBodyClause
   extends IBaseToken<TokenType.WindowBody>,
-    IOrderState {
-  __state: {
+    IOrderTrait {
+  readonly __state: Readonly<{
     partitionByValues: (IBaseToken | ISql | string)[];
     baseWindowName?: string;
     ordersBox: IOrdersBoxTerm;
     frameValue?: IBaseToken | ISql;
-  };
+  }>;
   fromBase(name: string): this;
   partitionBy(partitionBy: IBaseToken | ISql | string): this;
   withoutPartitionBy(): this;
@@ -93,8 +93,8 @@ export const windowBody = (): IWindowBodyClause => {
     fromBase(name: string) {
       return { ...this, __state: { ...this.__state, baseWindowName: name } };
     },
-    orderBy: orderByForState,
-    withoutOrder: withoutOrderForState,
+    orderBy: orderByTrait,
+    withoutOrder: withoutOrderTrait,
     partitionBy(partitionBy: IBaseToken | ISql | string) {
       return {
         ...this,
@@ -122,7 +122,7 @@ export const windowBody = (): IWindowBodyClause => {
           this.__state.partitionByValues.length > 0
             ? sql`PARTITION BY ${sql.join(
                 this.__state.partitionByValues.map((val) =>
-                  typeof val === "string" ? sql.liter(val) : toToken(val)
+                  typeof val === "string" ? sql.ident(val) : toToken(val)
                 ),
                 ", "
               )}`

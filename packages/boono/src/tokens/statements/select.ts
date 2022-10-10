@@ -4,16 +4,16 @@ import { IBaseToken, isToken, TokenType } from "../../types";
 import { alias } from "../alias";
 import {
   except,
-  ICompoundState,
+  ICompoundTrait,
   intersect,
   union,
   unionAll,
   withoutCompound,
 } from "../compounds";
-import { ICTEState, With, withoutWith, withRecursive } from "../cte";
-import { from, fromToSql, IFromState } from "../from";
+import { ICTETrait, With, withoutWith, withRecursive } from "../cte";
+import { from, fromToSql, IFromTrait } from "../from";
 import {
-  IJoinState,
+  IJoinToTrait,
   join,
   joinCross,
   joinFull,
@@ -34,22 +34,21 @@ import {
   withoutJoin,
 } from "../join";
 import {
-  buildInitialLimitOffsetState,
-  ILimitOffsetState,
+  buildInitialLimitOffset,
+  ILimitOffsetTrait,
   limit,
   offset,
   withoutLimit,
   withoutOffset,
 } from "../limitOffset";
 import {
-  IOrdersBoxTerm,
-  IOrderState,
+  IOrderTrait,
   orderBy,
-  orderByForState,
-  withoutOrderForState,
+  orderByTrait,
+  withoutOrderTrait,
 } from "../order";
 import { toToken } from "../rawSql";
-import { IWhereState, orWhere, where } from "../where";
+import { IWhereTrait, orWhere, where } from "../where";
 import { IValuesStatement } from "./values";
 
 export const isSelect = (val: unknown): val is ISelectStatement => {
@@ -62,29 +61,37 @@ export const isSelect = (val: unknown): val is ISelectStatement => {
 
 export interface ISelectStatement
   extends IBaseToken<TokenType.Select>,
-    IOrderState,
-    ICompoundState,
-    ILimitOffsetState,
-    ICTEState,
-    IWhereState,
-    IFromState,
-    IJoinState {
-  __state: {
-    ordersBox: IOrdersBoxTerm;
-    definedWindowFunctions: {
-      name: string;
-      windowBody: IBaseToken<TokenType.WindowBody>;
-    }[];
-  };
-  _distinctValue: boolean;
+    IOrderTrait,
+    ICompoundTrait,
+    ILimitOffsetTrait,
+    ICTETrait,
+    IWhereTrait,
+    IFromTrait,
+    IJoinToTrait {
+  readonly __state: Readonly<
+    {
+      definedWindowFunctions: Readonly<{
+        name: string;
+        windowBody: IBaseToken<TokenType.WindowBody>;
+      }>[];
 
-  _selectValues: {
-    toSelect: "*" | string | ISelectStatement | IBaseToken;
-    alias?: string;
-  }[];
+      distinctValue: boolean;
 
-  _groupByValues: (IBaseToken | string)[];
-  _havingValue?: IBaseToken;
+      selectValues: Readonly<{
+        toSelect: "*" | string | ISelectStatement | IBaseToken;
+        alias?: string;
+      }>[];
+
+      groupByValues: (IBaseToken | string)[];
+      havingValue?: IBaseToken;
+    } & IFromTrait["__state"] &
+      ILimitOffsetTrait["__state"] &
+      ICTETrait["__state"] &
+      IJoinToTrait["__state"] &
+      IOrderTrait["__state"] &
+      ICompoundTrait["__state"] &
+      IWhereTrait["__state"]
+  >;
 
   defineWindow(
     name: string,
@@ -105,12 +112,12 @@ type ISelectArgType =
   | ISqlAdapter
   | ISelectStatement
   | IValuesStatement
-  | { [key: string]: ISqlAdapter | string | ISelectStatement }
+  | Readonly<{ [key: string]: ISqlAdapter | string | ISelectStatement }>
   | IBaseToken;
 
 const selectArgsToValues = (
   args: ISelectArgType[]
-): ISelectStatement["_selectValues"] => {
+): ISelectStatement["__state"]["selectValues"] => {
   if (args === null || args === undefined || args.length === 0)
     return [{ toSelect: "*" }];
 
@@ -131,29 +138,35 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
   return {
     type: TokenType.Select,
     __state: {
+      compoundValues: [],
       ordersBox: orderBy(),
       definedWindowFunctions: [],
+      distinctValue: false,
+      selectValues: selectArgsToValues(selectArgs),
+      groupByValues: [],
+      joinValues: [],
+      limitOffsetValue: buildInitialLimitOffset(),
+      fromValues: [],
     },
-    _fromValues: [],
-    _selectValues: selectArgsToValues(selectArgs),
-    _distinctValue: false,
-    _groupByValues: [],
-    _compoundValues: [],
-    _joinValues: [],
-    _limitOffsetValue: buildInitialLimitOffsetState(),
     select(...selectArgs: ISelectArgType[]): ISelectStatement {
       return {
         ...this,
-        _selectValues: [
-          ...this._selectValues,
-          ...selectArgsToValues(selectArgs),
-        ],
+        __state: {
+          ...this.__state,
+          selectValues: [
+            ...this.__state.selectValues,
+            ...selectArgsToValues(selectArgs),
+          ],
+        },
       };
     },
     distinct(val: boolean): ISelectStatement {
       return {
         ...this,
-        _distinctValue: val,
+        __state: {
+          ...this.__state,
+          distinctValue: val,
+        },
       };
     },
     from,
@@ -166,16 +179,22 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
     groupBy(...values: (IBaseToken | ISql | string)[]): ISelectStatement {
       return {
         ...this,
-        _groupByValues: values.map((val) =>
-          typeof val === "string" ? val : toToken(val)
-        ),
+        __state: {
+          ...this.__state,
+          groupByValues: values.map((val) =>
+            typeof val === "string" ? val : toToken(val)
+          ),
+        },
       };
     },
     having(val: IBaseToken | ISql): ISelectStatement {
-      return { ...this, _havingValue: toToken(val) };
+      return {
+        ...this,
+        __state: { ...this.__state, havingValue: toToken(val) },
+      };
     },
-    orderBy: orderByForState,
-    withoutOrder: withoutOrderForState,
+    orderBy: orderByTrait,
+    withoutOrder: withoutOrderTrait,
 
     defineWindow(name: string, body: IBaseToken<TokenType.WindowBody>) {
       return {
@@ -240,15 +259,15 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
     toSql() {
       return sql.join(
         [
-          this._cteValue ? this._cteValue : null,
+          this.__state.cteValue ? this.__state.cteValue : null,
           sql`SELECT`,
-          this._distinctValue ? sql`DISTINCT` : null,
+          this.__state.distinctValue ? sql`DISTINCT` : null,
           sql.join(
-            this._selectValues.map((val) => {
+            this.__state.selectValues.map((val) => {
               if (val.toSelect === "*") {
                 return sql`*`;
-              } else if (typeof val.toSelect === "string") {
-                return sql.liter(val.toSelect);
+              } else if (typeof val.toSelect === "string" && !val.alias) {
+                return sql.ident(val.toSelect);
               } else {
                 return val.alias
                   ? alias(val.toSelect, val.alias)
@@ -256,26 +275,29 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
               }
             })
           ),
-          this._fromValues.length > 0 || this._joinValues.length > 0
+          this.__state.fromValues.length > 0 ||
+          this.__state.joinValues.length > 0
             ? sql`FROM`
             : null,
           fromToSql(this),
-          this._joinValues.length > 0
+          this.__state.joinValues.length > 0
             ? sql.join(
-                this._joinValues.map((expr) => expr.toSql()),
+                this.__state.joinValues.map((expr) => expr.toSql()),
                 " "
               )
             : null,
-          this._whereValue ? sql`WHERE ${this._whereValue}` : null,
-          this._groupByValues.length > 0
+          this.__state.whereValue
+            ? sql`WHERE ${this.__state.whereValue}`
+            : null,
+          this.__state.groupByValues.length > 0
             ? sql`GROUP BY ${sql.join(
-                this._groupByValues.map((val) =>
-                  typeof val === "string" ? sql.liter(val) : val
+                this.__state.groupByValues.map((val) =>
+                  typeof val === "string" ? sql.ident(val) : val
                 )
               )}`
             : null,
-          this._groupByValues.length > 0 && this._havingValue
-            ? sql`HAVING ${this._havingValue}`
+          this.__state.groupByValues.length > 0 && this.__state.havingValue
+            ? sql`HAVING ${this.__state.havingValue}`
             : null,
           ...(this.__state.definedWindowFunctions.length > 0
             ? [
@@ -289,13 +311,13 @@ export const select = (...selectArgs: ISelectArgType[]): ISelectStatement => {
                 ),
               ]
             : []),
-          this._compoundValues.length > 0
-            ? sql.join(this._compoundValues, " ")
+          this.__state.compoundValues.length > 0
+            ? sql.join(this.__state.compoundValues, " ")
             : null,
           this.__state.ordersBox,
-          this._limitOffsetValue.toSql().isEmpty
+          this.__state.limitOffsetValue.toSql().isEmpty
             ? null
-            : this._limitOffsetValue,
+            : this.__state.limitOffsetValue,
         ].filter((v) => v),
         " "
       );

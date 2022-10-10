@@ -5,12 +5,14 @@ import { alias } from "./alias";
 import { toToken } from "./rawSql";
 import { ISelectStatement } from "./statements/select";
 
-type IReturnValue = {
-  _toSelect: "*" | string | ISelectStatement | IBaseToken;
-  _alias?: string;
-};
+type IReturnValue = Readonly<{
+  toSelect: "*" | string | ISelectStatement | IBaseToken;
+  alias?: string;
+}>;
 export interface IReturningClause extends IBaseToken<TokenType.Returning> {
-  _values: IReturnValue[];
+  readonly __state: {
+    readonly values: IReturnValue[];
+  };
 }
 
 type IReturningArg =
@@ -20,39 +22,43 @@ type IReturningArg =
   | IBaseToken
   | { [key: string]: ISqlAdapter | string | ISelectStatement };
 
-export interface IReturningState {
-  _returningValue: IReturningClause;
+export interface IReturningTrait {
+  readonly __state: Readonly<{
+    returningValue: IReturningClause;
+  }>;
 
-  returning: typeof returningForState;
-  withoutReturning: typeof withoutReturningForState;
+  readonly returning: typeof returningTrait;
+  readonly withoutReturning: typeof withoutReturningTrait;
 }
 
 export const returning = (...args: IReturningArg[]): IReturningClause => {
   return {
     type: TokenType.Returning,
-    _values: args.flatMap((arg): IReturnValue | IReturnValue[] => {
-      if (sql.isSql(arg) || isToken(arg)) {
-        return { _toSelect: toToken(arg) };
-      } else if (typeof arg === "string") {
-        return { _toSelect: arg };
-      } else {
-        return Object.entries(arg).map(([columnOrAs, aliasOrQuery]) => {
-          return typeof aliasOrQuery === "string"
-            ? { _toSelect: columnOrAs, _alias: aliasOrQuery }
-            : { _toSelect: toToken(aliasOrQuery), _alias: columnOrAs };
-        });
-      }
-    }),
+    __state: {
+      values: args.flatMap((arg): IReturnValue | IReturnValue[] => {
+        if (sql.isSql(arg) || isToken(arg)) {
+          return { toSelect: toToken(arg) };
+        } else if (typeof arg === "string") {
+          return { toSelect: arg };
+        } else {
+          return Object.entries(arg).map(([columnOrAs, aliasOrQuery]) => {
+            return typeof aliasOrQuery === "string"
+              ? { toSelect: columnOrAs, alias: aliasOrQuery }
+              : { toSelect: toToken(aliasOrQuery), alias: columnOrAs };
+          });
+        }
+      }),
+    },
     toSql() {
-      return this._values.length > 0
+      return this.__state.values.length > 0
         ? sql`RETURNING ${sql.join(
-            this._values.map((val) => {
-              if (val._toSelect === "*") {
+            this.__state.values.map((val) => {
+              if (val.toSelect === "*") {
                 return sql`*`;
               } else {
-                return val._alias
-                  ? alias(val._toSelect, val._alias)
-                  : val._toSelect;
+                return val.alias
+                  ? alias(val.toSelect, val.alias)
+                  : val.toSelect;
               }
             })
           )}`
@@ -61,24 +67,37 @@ export const returning = (...args: IReturningArg[]): IReturningClause => {
   };
 };
 
-export function returningForState<T extends IReturningState>(
+export function returningTrait<T extends IReturningTrait>(
   this: T,
   ...args: IReturningArg[]
 ): T {
+  const state: IReturningTrait["__state"] = {
+    ...this.__state,
+    returningValue: {
+      ...this.__state.returningValue,
+      __state: {
+        ...this.__state.returningValue.__state,
+        values: [
+          ...this.__state.returningValue.__state.values,
+          ...returning(...args).__state.values,
+        ],
+      },
+    },
+  };
   return {
     ...this,
-    _returningValue: {
-      ...this._returningValue,
-      _values: [...this._returningValue._values, ...returning(...args)._values],
-    },
+    __state: state,
   };
 }
 
-export function withoutReturningForState<T extends IReturningState>(
-  this: T
-): T {
+export function withoutReturningTrait<T extends IReturningTrait>(this: T): T {
+  const state: IReturningTrait["__state"] = {
+    ...this.__state,
+    returningValue: returning(),
+  };
+
   return {
     ...this,
-    _returningValue: returning(),
+    __state: state,
   };
 }

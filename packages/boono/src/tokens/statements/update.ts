@@ -6,10 +6,10 @@ import {
 } from "@kikko-land/sql";
 
 import { IBaseToken, isToken, TokenType } from "../../types";
-import { ICTEState, With, withoutWith, withRecursive } from "../cte";
-import { from, fromToSql, IFromState } from "../from";
+import { ICTETrait, With, withoutWith, withRecursive } from "../cte";
+import { from, fromToSql, IFromTrait } from "../from";
 import {
-  IJoinState,
+  IJoinToTrait,
   join,
   joinCross,
   joinFull,
@@ -30,7 +30,7 @@ import {
   withoutJoin,
 } from "../join";
 import {
-  IOrReplaceState,
+  IOrReplaceTokenTrait,
   orAbort,
   orFail,
   orIgnore,
@@ -39,61 +39,72 @@ import {
 } from "../orReplace";
 import { buildRawSql } from "../rawSql";
 import {
-  IReturningState,
+  IReturningTrait,
   returning,
-  returningForState,
-  withoutReturningForState,
+  returningTrait,
+  withoutReturningTrait,
 } from "../returning";
 import { wrapParentheses } from "../utils";
-import { IWhereState, orWhere, where } from "../where";
+import { IWhereTrait, orWhere, where } from "../where";
 import { ISelectStatement } from "./select";
 import { IValuesStatement } from "./values";
 
-type ISetValue =
-  | {
+export type ISetValue =
+  | Readonly<{
       columnName: string;
       toSet:
         | IBaseToken<TokenType.RawSql>
         | IPrimitiveValue
         | ISelectStatement
         | IValuesStatement;
-    }
+    }>
   | IBaseToken<TokenType.RawSql>;
 
 export interface IUpdateStatement
   extends IBaseToken<TokenType.Update>,
-    ICTEState,
-    IWhereState,
-    IFromState,
-    IReturningState,
-    IOrReplaceState,
-    IJoinState {
-  _updateTable: IContainsTable;
-  _setValues: ISetValue[];
+    ICTETrait,
+    IWhereTrait,
+    IFromTrait,
+    IReturningTrait,
+    IOrReplaceTokenTrait,
+    IJoinToTrait {
+  readonly __state: Readonly<
+    {
+      updateTable: IContainsTable;
+      setValues: ISetValue[];
+    } & IFromTrait["__state"] &
+      IOrReplaceTokenTrait["__state"] &
+      IJoinToTrait["__state"] &
+      IReturningTrait["__state"] &
+      ICTETrait["__state"] &
+      IWhereTrait["__state"]
+  >;
 
   set(...args: ISetArgType[]): IUpdateStatement;
 }
 
-type ISetArgType =
+export type ISetArgType =
   | ISqlAdapter
-  | {
+  | Readonly<{
       [key: string]:
         | ISqlAdapter
         | IBaseToken<TokenType.RawSql>
         | IPrimitiveValue
         | ISelectStatement
         | IValuesStatement;
-    }
+    }>
   | IBaseToken<TokenType.RawSql>;
 
 export const update = (tbl: string | IContainsTable): IUpdateStatement => {
   return {
     type: TokenType.Update,
-    _updateTable: typeof tbl === "string" ? sql.table(tbl) : tbl,
-    _setValues: [],
-    _fromValues: [],
-    _joinValues: [],
-    _returningValue: returning(),
+    __state: {
+      updateTable: typeof tbl === "string" ? sql.table(tbl) : tbl,
+      setValues: [],
+      returningValue: returning(),
+      joinValues: [],
+      fromValues: [],
+    },
 
     with: With,
     withoutWith,
@@ -104,8 +115,8 @@ export const update = (tbl: string | IContainsTable): IUpdateStatement => {
     where,
     orWhere,
 
-    returning: returningForState,
-    withoutReturning: withoutReturningForState,
+    returning: returningTrait,
+    withoutReturning: withoutReturningTrait,
 
     orAbort,
     orFail,
@@ -154,40 +165,49 @@ export const update = (tbl: string | IContainsTable): IUpdateStatement => {
         }
       });
 
-      return { ...this, _setValues: [...this._setValues, ...vals] };
+      return {
+        ...this,
+        __state: {
+          ...this.__state,
+          setValues: [...this.__state.setValues, ...vals],
+        },
+      };
     },
 
     toSql() {
       return sql.join(
         [
-          this._cteValue ? this._cteValue : null,
+          this.__state.cteValue ? this.__state.cteValue : null,
           sql`UPDATE`,
-          this._orReplaceValue
-            ? sql`OR ${sql.raw(this._orReplaceValue)}`
+          this.__state.orReplaceValue
+            ? sql`OR ${sql.raw(this.__state.orReplaceValue)}`
             : null,
-          this._updateTable,
+          this.__state.updateTable,
           sql`SET`,
           sql.join(
-            this._setValues.map((val) =>
+            this.__state.setValues.map((val) =>
               isToken(val)
                 ? val
-                : sql`${sql.liter(val.columnName)} = ${wrapParentheses(
+                : sql`${sql.ident(val.columnName)} = ${wrapParentheses(
                     val.toSet
                   )}`
             )
           ),
-          this._fromValues.length > 0 || this._joinValues.length > 0
+          this.__state.fromValues.length > 0 ||
+          this.__state.joinValues.length > 0
             ? sql`FROM`
             : null,
           fromToSql(this),
-          this._joinValues.length > 0
+          this.__state.joinValues.length > 0
             ? sql.join(
-                this._joinValues.map((expr) => expr.toSql()),
+                this.__state.joinValues.map((expr) => expr.toSql()),
                 " "
               )
             : null,
-          this._whereValue ? sql`WHERE ${this._whereValue}` : null,
-          this._returningValue,
+          this.__state.whereValue
+            ? sql`WHERE ${this.__state.whereValue}`
+            : null,
+          this.__state.returningValue,
         ].filter((v) => v),
         " "
       );

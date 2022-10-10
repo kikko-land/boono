@@ -6,31 +6,36 @@ import { wrapParentheses } from "./utils";
 
 export interface ILimitOffsetTerm
   extends IBaseToken<TokenType.LimitOffsetTerm> {
-  _limitValue?: IBaseToken;
-  _offsetValue?: IBaseToken;
+  readonly __state: Readonly<{
+    limitValue?: IBaseToken;
+    offsetValue?: IBaseToken;
+  }>;
 }
 
-export interface ILimitOffsetState {
-  _limitOffsetValue: ILimitOffsetTerm;
+export interface ILimitOffsetTrait {
+  readonly __state: Readonly<{
+    limitOffsetValue: ILimitOffsetTerm;
+  }>;
 
-  limit: typeof limit;
-  offset: typeof offset;
-  withoutLimit: typeof withoutLimit;
-  withoutOffset: typeof withoutOffset;
+  readonly limit: typeof limit;
+  readonly offset: typeof offset;
+  readonly withoutLimit: typeof withoutLimit;
+  readonly withoutOffset: typeof withoutOffset;
 }
 
-export const buildInitialLimitOffsetState = (): ILimitOffsetTerm => {
+export const buildInitialLimitOffset = (): ILimitOffsetTerm => {
   return {
     type: TokenType.LimitOffsetTerm,
+    __state: {},
     toSql() {
-      return this._limitValue
+      return this.__state.limitValue
         ? sql.join(
             [
-              this._limitValue
-                ? sql`LIMIT ${wrapParentheses(this._limitValue)}`
+              this.__state.limitValue
+                ? sql`LIMIT ${wrapParentheses(this.__state.limitValue)}`
                 : null,
-              this._offsetValue && this._limitValue
-                ? sql`OFFSET ${wrapParentheses(this._offsetValue)}`
+              this.__state.offsetValue && this.__state.limitValue
+                ? sql`OFFSET ${wrapParentheses(this.__state.offsetValue)}`
                 : null,
             ].filter((v) => v),
             " "
@@ -40,39 +45,80 @@ export const buildInitialLimitOffsetState = (): ILimitOffsetTerm => {
   };
 };
 
-export function limit<T extends ILimitOffsetState>(
+export function limit<T extends ILimitOffsetTrait>(
   this: T,
   val: IBaseToken | ISqlAdapter | IPrimitiveValue
 ): T {
-  return {
-    ...this,
-    _limitOffsetValue: { ...this._limitOffsetValue, _limitValue: toToken(val) },
-  };
-}
-
-export function withoutLimit<T extends ILimitOffsetState>(this: T): T {
-  return {
-    ...this,
-    _limitOffsetValue: { ...this._limitOffsetValue, _limitValue: undefined },
-  };
-}
-
-export function offset<T extends ILimitOffsetState>(
-  this: T,
-  val: IBaseToken | ISqlAdapter | IPrimitiveValue
-): T {
-  return {
-    ...this,
-    _limitOffsetValue: {
-      ...this._limitOffsetValue,
-      _offsetValue: toToken(val),
+  const state: ILimitOffsetTrait["__state"] = {
+    ...this.__state,
+    limitOffsetValue: {
+      ...this.__state.limitOffsetValue,
+      __state: {
+        ...this.__state.limitOffsetValue.__state,
+        limitValue: toToken(val),
+      },
     },
   };
-}
 
-export function withoutOffset<T extends ILimitOffsetState>(this: T): T {
   return {
     ...this,
-    _limitOffsetValue: { ...this._limitOffsetValue, _offsetValue: undefined },
+    __state: state,
+  };
+}
+
+export function withoutLimit<T extends ILimitOffsetTrait>(this: T): T {
+  const state: ILimitOffsetTrait["__state"] = {
+    ...this.__state,
+    limitOffsetValue: {
+      ...this.__state.limitOffsetValue,
+      __state: {
+        ...this.__state.limitOffsetValue.__state,
+        limitValue: undefined,
+      },
+    },
+  };
+
+  return {
+    ...this,
+    __state: state,
+  };
+}
+
+export function offset<T extends ILimitOffsetTrait>(
+  this: T,
+  val: IBaseToken | ISqlAdapter | IPrimitiveValue
+): T {
+  const state: ILimitOffsetTrait["__state"] = {
+    ...this.__state,
+    limitOffsetValue: {
+      ...this.__state.limitOffsetValue,
+      __state: {
+        ...this.__state.limitOffsetValue.__state,
+        offsetValue: toToken(val),
+      },
+    },
+  };
+
+  return {
+    ...this,
+    __state: state,
+  };
+}
+
+export function withoutOffset<T extends ILimitOffsetTrait>(this: T): T {
+  const state: ILimitOffsetTrait["__state"] = {
+    ...this.__state,
+    limitOffsetValue: {
+      ...this.__state.limitOffsetValue,
+      __state: {
+        ...this.__state.limitOffsetValue.__state,
+        offsetValue: undefined,
+      },
+    },
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }

@@ -4,11 +4,11 @@ import { IBaseToken, TokenType } from "../types";
 import { toToken } from "./rawSql";
 
 export interface IOrderTerm extends IBaseToken<TokenType.OrderTerm> {
-  __state: {
+  readonly __state: Readonly<{
     orderType: "DESC" | "ASC";
     val: IBaseToken | string;
     nullOrder?: "NULLS FIRST" | "NULLS LAST";
-  };
+  }>;
 }
 
 const orderTerm = (
@@ -27,7 +27,7 @@ const orderTerm = (
       return sql.join(
         [
           typeof this.__state.val === "string"
-            ? sql.liter(this.__state.val)
+            ? sql.ident(this.__state.val)
             : this.__state.val,
           sql.raw(this.__state.orderType),
           nullOrder ? sql.raw(nullOrder) : sql.empty,
@@ -39,9 +39,9 @@ const orderTerm = (
 };
 
 export interface IOrdersBoxTerm extends IBaseToken<TokenType.OrdersBoxTerm> {
-  __state: {
+  readonly __state: Readonly<{
     values: IOrderTerm[];
-  };
+  }>;
 }
 
 export const orderBy = (...args: IOrderTerm[]): IOrdersBoxTerm => {
@@ -72,46 +72,50 @@ export const asc = (
   return orderTerm("ASC", val, nullOrder);
 };
 
-export interface IOrderState {
-  __state: {
+export interface IOrderTrait {
+  readonly __state: Readonly<{
     ordersBox: IOrdersBoxTerm;
-  };
+  }>;
 
-  orderBy: typeof orderByForState;
-  withoutOrder: typeof withoutOrderForState;
+  readonly orderBy: typeof orderByTrait;
+  readonly withoutOrder: typeof withoutOrderTrait;
 }
 
-export function orderByForState<T extends IOrderState>(
+export function orderByTrait<T extends IOrderTrait>(
   this: T,
   ...orderTerm: IOrderTerm[]
 ): T {
-  return {
-    ...this,
-    __state: {
-      ...this.__state,
-      ordersBox: {
-        ...this.__state.ordersBox,
-        __state: {
-          ...this.__state.ordersBox.__state,
-          values: [...this.__state.ordersBox.__state.values, ...orderTerm],
-        },
+  const state: IOrderTrait["__state"] = {
+    ...this.__state,
+    ordersBox: {
+      ...this.__state.ordersBox,
+      __state: {
+        ...this.__state.ordersBox.__state,
+        values: [...this.__state.ordersBox.__state.values, ...orderTerm],
       },
     },
   };
-}
 
-export function withoutOrderForState<T extends IOrderState>(this: T): T {
   return {
     ...this,
-    __state: {
-      ...this.__state,
-      ordersBox: {
-        ...this.__state.ordersBox,
-        __state: {
-          ...this.__state.ordersBox.__state,
-          values: [],
-        },
+    __state: state,
+  };
+}
+
+export function withoutOrderTrait<T extends IOrderTrait>(this: T): T {
+  const state: IOrderTrait["__state"] = {
+    ...this.__state,
+    ordersBox: {
+      ...this.__state.ordersBox,
+      __state: {
+        ...this.__state.ordersBox.__state,
+        values: [],
       },
     },
+  };
+
+  return {
+    ...this,
+    __state: state,
   };
 }

@@ -5,17 +5,19 @@ import { alias } from "./alias";
 import { toToken } from "./rawSql";
 import { wrapParentheses } from "./utils";
 
-export interface IFromState {
-  _fromValues: (
-    | IContainsTable
-    | IBaseToken
-    | { select: IContainsTable | IBaseToken; alias: string }
-  )[];
+export interface IFromTrait {
+  readonly __state: Readonly<{
+    fromValues: Readonly<
+      | IContainsTable
+      | IBaseToken
+      | { select: IContainsTable | IBaseToken; alias: string }
+    >[];
+  }>;
 
-  from: typeof from;
+  readonly from: typeof from;
 }
 
-export function from<T extends IFromState>(
+export function from<T extends IFromTrait>(
   this: T,
   ...values: (
     | IBaseToken
@@ -25,10 +27,10 @@ export function from<T extends IFromState>(
     | Record<string, IBaseToken | ISqlAdapter | IContainsTable | string>
   )[]
 ): T {
-  return {
-    ...this,
-    _fromValues: [
-      ...this._fromValues,
+  const state: IFromTrait["__state"] = {
+    ...this.__state,
+    fromValues: [
+      ...this.__state.fromValues,
       ...values
         .map((v) => {
           if (typeof v === "string") {
@@ -48,12 +50,17 @@ export function from<T extends IFromState>(
         .flat(),
     ],
   };
+
+  return {
+    ...this,
+    __state: state,
+  };
 }
 
-export const fromToSql = (state: IFromState): ISql | null => {
-  return state._fromValues.length > 0
+export const fromToSql = (state: IFromTrait): ISql | null => {
+  return state.__state.fromValues.length > 0
     ? sql.join(
-        state._fromValues.map((v) =>
+        state.__state.fromValues.map((v) =>
           isToken(v) || sql.isTable(v) ? v : alias(v.select, v.alias)
         )
       )
