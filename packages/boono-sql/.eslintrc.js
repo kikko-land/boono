@@ -1,6 +1,6 @@
-const rootDir = process.cwd().includes("packages/sql")
+const rootDir = process.cwd().includes("packages/boono-sql")
   ? "./"
-  : "./packages/sql";
+  : "./packages/boono-sql";
 
 module.exports = {
   extends: ["../../node_modules/@kikko-land/common-scripts/eslintrc.cjs"],
