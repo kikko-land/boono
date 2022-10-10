@@ -49,7 +49,7 @@ import { IWhereTrait, orWhere, where } from "../where";
 import { ISelectStatement } from "./select";
 import { IValuesStatement } from "./values";
 
-type ISetValue =
+export type ISetValue =
   | Readonly<{
       columnName: string;
       toSet:
@@ -83,7 +83,7 @@ export interface IUpdateStatement
   set(...args: ISetArgType[]): IUpdateStatement;
 }
 
-type ISetArgType =
+export type ISetArgType =
   | ISqlAdapter
   | Readonly<{
       [key: string]:

@@ -27,6 +27,8 @@ export enum TokenType {
   Returning = "Returning",
   WindowFn = "WindowFn",
   WindowBody = "WindowBody",
+  ConflictedColumns = "ConflictedColumns",
+  Do = "DO",
 }
 
 export interface IBaseToken<T extends TokenType = TokenType> {

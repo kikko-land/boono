@@ -15,7 +15,7 @@ export function orAbort<T extends IOrReplaceTokenTrait>(this: T): T {
     orReplaceValue: "ABORT",
   };
 
-  return { ...this, __state: state };
+  return { ...this, __state: { ...this.__state, ...state } };
 }
 
 export function orFail<T extends IOrReplaceTokenTrait>(this: T): T {
@@ -23,7 +23,7 @@ export function orFail<T extends IOrReplaceTokenTrait>(this: T): T {
     orReplaceValue: "FAIL",
   };
 
-  return { ...this, __state: state };
+  return { ...this, __state: { ...this.__state, ...state } };
 }
 
 export function orIgnore<T extends IOrReplaceTokenTrait>(this: T): T {
@@ -31,7 +31,7 @@ export function orIgnore<T extends IOrReplaceTokenTrait>(this: T): T {
     orReplaceValue: "IGNORE",
   };
 
-  return { ...this, __state: state };
+  return { ...this, __state: { ...this.__state, ...state } };
 }
 
 export function orReplace<T extends IOrReplaceTokenTrait>(this: T): T {
@@ -39,7 +39,7 @@ export function orReplace<T extends IOrReplaceTokenTrait>(this: T): T {
     orReplaceValue: "REPLACE",
   };
 
-  return { ...this, __state: state };
+  return { ...this, __state: { ...this.__state, ...state } };
 }
 
 export function orRollback<T extends IOrReplaceTokenTrait>(this: T): T {
@@ -47,5 +47,5 @@ export function orRollback<T extends IOrReplaceTokenTrait>(this: T): T {
     orReplaceValue: "ROLLBACK",
   };
 
-  return { ...this, __state: state };
+  return { ...this, __state: { ...this.__state, ...state } };
 }

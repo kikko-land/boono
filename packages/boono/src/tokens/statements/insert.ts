@@ -22,6 +22,7 @@ import {
   returningTrait,
   withoutReturningTrait,
 } from "../returning";
+import { IOnConflictTrait, onConflict } from "./insert/onConflict";
 import { ISelectStatement, isSelect } from "./select";
 import { isValues, IValuesStatement } from "./values";
 
@@ -30,7 +31,8 @@ export interface IInsertStatement
   extends IBaseToken<TokenType.Insert>,
     ICTETrait,
     IReturningTrait,
-    IOrReplaceTokenTrait {
+    IOrReplaceTokenTrait,
+    IOnConflictTrait {
   readonly __state: Readonly<
     {
       intoTable?: string | IContainsTable;
@@ -45,7 +47,8 @@ export interface IInsertStatement
           }>[][];
     } & ICTETrait["__state"] &
       IReturningTrait["__state"] &
-      IOrReplaceTokenTrait["__state"]
+      IOrReplaceTokenTrait["__state"] &
+      IOnConflictTrait["__state"]
   >;
 
   setColumnNames(columnNames: string[]): IInsertStatement;
@@ -127,6 +130,8 @@ export const insert = (insertArg: IInsertArg): IInsertStatement => {
 
     returning: returningTrait,
     withoutReturning: withoutReturningTrait,
+
+    onConflict,
 
     setColumnNames(names: string[]): IInsertStatement {
       return { ...this, __state: { ...this.__state, columnNames: names } };
