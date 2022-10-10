@@ -1,5 +1,17 @@
 # @kikko-land/query-builder
 
+## 0.2.0
+
+### Minor Changes
+
+- 6b062d5: Add window function support to SELECT
+- a947ed3: First release
+
+### Patch Changes
+
+- Updated dependencies [a947ed3]
+  - @kikko-land/boono-sql@0.2.0
+
 ## 0.1.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @kikko-land/boono-sql
 
+## 0.2.0
+
+### Minor Changes
+
+- a947ed3: First release
+
 ## 0.1.1
 
 ### Patch Changes
