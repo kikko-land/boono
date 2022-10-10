@@ -42,6 +42,9 @@
     "check-typing": "tsc --noEmit",
     "test": "vitest"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {},
   "devDependencies": {
     "@kikko-land/common-scripts": "^0.1.1",
