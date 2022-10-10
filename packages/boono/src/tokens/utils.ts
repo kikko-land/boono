@@ -4,7 +4,7 @@ import {
   ISql,
   ISqlAdapter,
   sql,
-} from "@kikko-land/sql";
+} from "@kikko-land/boono-sql";
 
 import { IBaseToken, isToken, TokenType } from "../types";
 import { isBinaryOperator } from "./binary";

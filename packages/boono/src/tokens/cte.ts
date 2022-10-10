@@ -1,4 +1,4 @@
-import { ISql, sql } from "@kikko-land/sql";
+import { ISql, sql } from "@kikko-land/boono-sql";
 
 import { IBaseToken, TokenType } from "../types";
 import { buildRawSql } from "./rawSql";

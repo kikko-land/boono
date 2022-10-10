@@ -23,7 +23,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@kikko-land/sql": "^0.1.1"
+    "@kikko-land/boono-sql": "^0.1.1"
   },
   "devDependencies": {
     "@kikko-land/common-scripts": "^0.1.1",

@@ -3,7 +3,7 @@ import {
   IPrimitiveValue,
   ISqlAdapter,
   sql,
-} from "@kikko-land/sql";
+} from "@kikko-land/boono-sql";
 
 import { IBaseToken, isToken, TokenType } from "../../types";
 import { ICTEState, With, withoutWith, withRecursive } from "../cte";

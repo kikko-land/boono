@@ -1,4 +1,4 @@
-# @kikko-land/sql
+# @kikko-land/boono-sql
 
 ## 0.1.1
 

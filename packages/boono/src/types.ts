@@ -1,4 +1,4 @@
-import { ISql } from "@kikko-land/sql";
+import { ISql } from "@kikko-land/boono-sql";
 
 export enum TokenType {
   Binary = "Binary",

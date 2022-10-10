@@ -1,4 +1,4 @@
-import { ISql, ISqlAdapter, sql } from "@kikko-land/sql";
+import { ISql, ISqlAdapter, sql } from "@kikko-land/boono-sql";
 
 import { IBaseToken, TokenType } from "../types";
 import { and, conditionValuesToToken, IConditionValue } from "./binary";

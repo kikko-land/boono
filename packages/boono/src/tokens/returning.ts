@@ -1,4 +1,4 @@
-import { ISqlAdapter, sql } from "@kikko-land/sql";
+import { ISqlAdapter, sql } from "@kikko-land/boono-sql";
 
 import { IBaseToken, isToken, TokenType } from "../types";
 import { alias } from "./alias";

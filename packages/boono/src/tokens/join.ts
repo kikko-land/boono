@@ -1,5 +1,5 @@
-import { IContainsTable, ISqlAdapter, sql } from "@kikko-land/sql";
-import { isTable } from "@kikko-land/sql";
+import { IContainsTable, ISqlAdapter, sql } from "@kikko-land/boono-sql";
+import { isTable } from "@kikko-land/boono-sql";
 
 import { IBaseToken, isToken, TokenType } from "../types";
 import { alias } from "./alias";

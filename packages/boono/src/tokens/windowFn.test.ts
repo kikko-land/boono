@@ -1,4 +1,4 @@
-import { sql } from "@kikko-land/sql";
+import { sql } from "@kikko-land/boono-sql";
 import { describe, expect, it } from "vitest";
 
 import { gtEq$, or } from "./binary";

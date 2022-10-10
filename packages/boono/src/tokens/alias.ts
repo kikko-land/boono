@@ -3,7 +3,7 @@ import {
   IPrimitiveValue,
   ISqlAdapter,
   sql,
-} from "@kikko-land/sql";
+} from "@kikko-land/boono-sql";
 
 import { IBaseToken, TokenType } from "../types";
 import { toToken } from "./rawSql";
