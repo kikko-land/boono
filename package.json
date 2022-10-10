@@ -7,8 +7,8 @@
   "scripts": {
     "add-changeset": "yarn changeset",
     "bump-versions": "yarn changeset version",
-    "publish-packages": "yarn turbo run lint && yarn turbo run build && yarn workspace @kikko-land/common-scripts publish-packages",
-    "check-publish": "node --loader ts-node/esm ./publish.ts",
+    "publish-packages": "yarn turbo run lint && yarn turbo run build && yarn run-publish",
+    "run-publish": "node --loader ts-node/esm ./publish.ts",
     "build": "yarn turbo run build",
     "lint": "yarn turbo run lint",
     "test": "yarn turbo run test",
