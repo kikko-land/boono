@@ -1,5 +1,11 @@
 # @kikko-land/boono-sql
 
+## 0.3.0
+
+### Minor Changes
+
+- 58ca1bc: Add new template string api
+
 ## 0.2.0
 
 ### Minor Changes
