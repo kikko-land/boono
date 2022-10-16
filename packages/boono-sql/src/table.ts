@@ -12,12 +12,38 @@ export interface IContainsTable {
 }
 
 export const table = (
-  name: string,
-  dependsOnTables?: ITableDef[]
+  ...args: [
+    name: string,
+    dependsOnTables?: ITableDef[]
+  ] | [
+    rawStrings: ReadonlyArray<string>,
+    ...rawValues: unknown[]
+  ]
 ): ITableDef & IContainsTable => {
+  const str = (() => {
+    if (typeof args[0] === 'string') {
+      return args[0];
+    } else {
+      let templateArgs = args as [
+        rawStrings: ReadonlyArray<string>,
+        ...rawValues: unknown[]
+      ];
+
+      let result = templateArgs[0][0]
+
+      for (let i = 1; i < templateArgs[0].length; i++) {
+        result = result.concat(templateArgs[i] as string)
+      }
+
+      return result;
+    }
+  })();
+
+  const dependsOnTables = typeof args[0] === 'string' ? (args[1] as ITableDef[] | undefined) || [] : [];
+
   return {
-    name,
-    dependsOnTables: dependsOnTables || [],
+    name: str,
+    dependsOnTables: dependsOnTables,
     get allDependingTables() {
       const tableDefs: ITableDef[] = [];
 

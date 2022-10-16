@@ -75,10 +75,7 @@ export interface ISql extends ISqlAdapter {
 function internalSql(
   _rawStrings: ReadonlyArray<string>,
   _rawValues: IRawValue[]
-
 ): ISql {
-
-
   if (_rawStrings.length - 1 !== _rawValues.length) {
     if (_rawStrings.length === 0) {
       throw new TypeError("Expected at least 1 string");
@@ -100,7 +97,7 @@ function internalSql(
   const tablesLength = _rawValues.reduce<number>(
     (len, value) =>
       len +
-      (isSql(value) ? value.toSql().tables.length : isTable(value) ? 1 : 0),
+      (isSql(value) ? value.toSql().tables.length : isTable(value) ? 1 + value[tableSymbol].allDependingTables.length : 0),
     0
   );
 
@@ -140,6 +137,11 @@ function internalSql(
       strings[pos] += strip(child[tableSymbol].name) + rawString;
 
       tables[tableI++] = child[tableSymbol];
+
+      const dependsOnTables = child[tableSymbol].dependsOnTables;
+      for (let i = 0; i < dependsOnTables.length; i++) {
+        tables[tableI++] = dependsOnTables[i];
+      }
     } else {
       values[pos++] = child;
       strings[pos] = rawString;
@@ -235,13 +237,79 @@ export function sql(
   return internalSql(rawStrings, rawValues)
 }
 
-sql.raw = (value: string) => {
-  return sql([value]);
+sql.raw = (...args: [str: string] | [
+  rawStrings: ReadonlyArray<string>,
+  ...rawValues: unknown[]
+]) => {
+  const str = (() => {
+    if (typeof args[0] === 'string') {
+      return args[0];
+    } else {
+      let templateArgs = args as [
+        rawStrings: ReadonlyArray<string>,
+        ...rawValues: unknown[]
+      ];
+
+      let result = templateArgs[0][0]
+
+      for (let i = 1; i < templateArgs[0].length; i++) {
+        result = result.concat(templateArgs[i] as string)
+      }
+
+      return result;
+    }
+  })();
+
+  return sql([str]);
 };
-sql.strip = (str: string) => {
-  return sql.raw((str).replace(/[^a-zA-Z0-9]+/g, ''));
+sql.strip = (...args: [str: string] | [
+  rawStrings: ReadonlyArray<string>,
+  ...rawValues: unknown[]
+]) => {
+  const str = (() => {
+    if (typeof args[0] === 'string') {
+      return args[0];
+    } else {
+      let templateArgs = args as [
+        rawStrings: ReadonlyArray<string>,
+        ...rawValues: unknown[]
+      ];
+
+      let result = templateArgs[0][0]
+
+      for (let i = 1; i < templateArgs[0].length; i++) {
+        result = result.concat(templateArgs[i] as string)
+      }
+
+      return result;
+    }
+  })();
+
+  return sql.raw(str.replace(/[^a-zA-Z0-9]+/g, ''));
 }
-sql.liter = (str: string) => {
+sql.liter = (...args: [str: string] | [
+  rawStrings: ReadonlyArray<string>,
+  ...rawValues: unknown[]
+]) => {
+  const str = (() => {
+    if (typeof args[0] === 'string') {
+      return args[0];
+    } else {
+      let templateArgs = args as [
+        rawStrings: ReadonlyArray<string>,
+        ...rawValues: unknown[]
+      ];
+
+      let result = templateArgs[0][0]
+
+      for (let i = 1; i < templateArgs[0].length; i++) {
+        result = result.concat(templateArgs[i] as string)
+      }
+
+      return result;
+    }
+  })();
+
   return sql.raw(strip(str));
 };
 sql.table = table;

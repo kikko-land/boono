@@ -23,6 +23,7 @@
     }
   },
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
@@ -41,9 +42,6 @@
     "lint": "eslint \"src/**/*.{tsx,ts}\" --max-warnings=0",
     "check-typing": "tsc --noEmit",
     "test": "vitest"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "dependencies": {},
   "devDependencies": {

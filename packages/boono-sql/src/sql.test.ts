@@ -4,7 +4,7 @@ import { sql } from "./sql";
 
 describe("sql", () => {
   it("works", () => {
-    const query = sql`SELECT * FROM ${sql.table("users")} WHERE ${sql.liter(
+    const query = sql`SELECT * FROM ${sql.table`users`} WHERE ${sql.liter(
       "num"
     )}=${1} AND nullColl=${null} AND ids IN ${sql.join(
       [1, 2, 3],
@@ -20,8 +20,22 @@ describe("sql", () => {
     });
   });
 
-  describe("liter", () => {
-    it.todo("strips all bad values", () => {});
+  describe("strip", () => {
+    it("strips all bad values", () => {
+      expect(sql.strip('d-f.').raw).toEqual('df')
+      expect(sql.strip`'d-f`.raw).toEqual('df')
+      expect(sql.strip`'d-f${'kek'}.`.raw).toEqual('dfkek')
+    });
+  });
+
+  describe("table", () => {
+    it("works", () => {
+      const query = sql`SELECT * FROM ${sql.table`notes`}`;
+      expect(query.tables.map(({name}) => name)).toStrictEqual(['notes'])
+
+      const query2 = sql`SELECT * FROM ${sql.table('notes', [sql.table`user`])}`;
+      expect(query2.tables.map(({name}) => name)).toStrictEqual(['notes', 'users'])
+    });
   });
 
   describe("join", () => {
