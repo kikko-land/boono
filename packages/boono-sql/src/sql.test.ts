@@ -34,7 +34,7 @@ describe("sql", () => {
       expect(query.tables.map(({name}) => name)).toStrictEqual(['notes'])
 
       const query2 = sql`SELECT * FROM ${sql.table('notes', [sql.table`user`])}`;
-      expect(query2.tables.map(({name}) => name)).toStrictEqual(['notes', 'users'])
+      expect(query2.tables.map(({name}) => name)).toStrictEqual(['notes', 'user'])
     });
   });
 
