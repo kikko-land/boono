@@ -1,5 +1,16 @@
 # @kikko-land/query-builder
 
+## 0.3.0
+
+### Minor Changes
+
+- 72cefb8: Bump
+
+### Patch Changes
+
+- Updated dependencies [72cefb8]
+  - @kikko-land/boono-sql@0.4.0
+
 ## 0.2.1
 
 ### Patch Changes

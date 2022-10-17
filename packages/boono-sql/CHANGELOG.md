@@ -1,5 +1,11 @@
 # @kikko-land/boono-sql
 
+## 0.4.0
+
+### Minor Changes
+
+- 72cefb8: Bump
+
 ## 0.3.0
 
 ### Minor Changes
