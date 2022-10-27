@@ -45,7 +45,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@kikko-land/common-scripts": "^0.1.1",
+    "@kikko-land/common-scripts": "^0.4.0",
     "vitest": "^0.19.1"
   }
 }
