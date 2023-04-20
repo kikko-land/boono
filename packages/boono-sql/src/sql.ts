@@ -25,12 +25,14 @@ const deleteRegex = /delete\s+from\s+/gim;
 const updateRegex = /update\s+(or\s+\w+\s+)?/gim;
 
 const strip = (str: string) => {
-  return str
-    // eslint-disable-next-line no-control-regex
-    .replace(/[^\u0001-\u007f]"/g, "")
-    .split(".")
-    .map((v) => '"' + v + '"')
-    .join(".");
+  return (
+    str
+      // eslint-disable-next-line no-control-regex
+      .replace(/[^\u0001-\u007f]"/g, "")
+      .split(".")
+      .map((v) => '"' + v + '"')
+      .join(".")
+  );
 };
 
 export interface ISqlAdapter {
@@ -97,7 +99,11 @@ function internalSql(
   const tablesLength = _rawValues.reduce<number>(
     (len, value) =>
       len +
-      (isSql(value) ? value.toSql().tables.length : isTable(value) ? 1 + value[tableSymbol].allDependingTables.length : 0),
+      (isSql(value)
+        ? value.toSql().tables.length
+        : isTable(value)
+        ? 1 + value[tableSymbol].allDependingTables.length
+        : 0),
     0
   );
 
@@ -234,15 +240,16 @@ export function sql(
   rawStrings: ReadonlyArray<string>,
   ...rawValues: IRawValue[]
 ): ISql {
-  return internalSql(rawStrings, rawValues)
+  return internalSql(rawStrings, rawValues);
 }
 
-sql.raw = (...args: [str: string] | [
-  rawStrings: ReadonlyArray<string>,
-  ...rawValues: unknown[]
-]) => {
+sql.raw = (
+  ...args:
+    | [str: string]
+    | [rawStrings: ReadonlyArray<string>, ...rawValues: unknown[]]
+) => {
   const str = (() => {
-    if (typeof args[0] === 'string') {
+    if (typeof args[0] === "string") {
       return args[0];
     } else {
       let templateArgs = args as [
@@ -250,10 +257,10 @@ sql.raw = (...args: [str: string] | [
         ...rawValues: unknown[]
       ];
 
-      let result = templateArgs[0][0]
+      let result = templateArgs[0][0];
 
       for (let i = 1; i < templateArgs[0].length; i++) {
-        result = result.concat(templateArgs[i] as string)
+        result = result.concat(templateArgs[i] as string);
       }
 
       return result;
@@ -262,12 +269,13 @@ sql.raw = (...args: [str: string] | [
 
   return sql([str]);
 };
-sql.strip = (...args: [str: string] | [
-  rawStrings: ReadonlyArray<string>,
-  ...rawValues: unknown[]
-]) => {
+sql.strip = (
+  ...args:
+    | [str: string]
+    | [rawStrings: ReadonlyArray<string>, ...rawValues: unknown[]]
+) => {
   const str = (() => {
-    if (typeof args[0] === 'string') {
+    if (typeof args[0] === "string") {
       return args[0];
     } else {
       let templateArgs = args as [
@@ -275,24 +283,25 @@ sql.strip = (...args: [str: string] | [
         ...rawValues: unknown[]
       ];
 
-      let result = templateArgs[0][0]
+      let result = templateArgs[0][0];
 
       for (let i = 1; i < templateArgs[0].length; i++) {
-        result = result.concat(templateArgs[i] as string)
+        result = result.concat(templateArgs[i] as string);
       }
 
       return result;
     }
   })();
 
-  return sql.raw(str.replace(/[^a-zA-Z0-9]+/g, ''));
-}
-sql.liter = (...args: [str: string] | [
-  rawStrings: ReadonlyArray<string>,
-  ...rawValues: unknown[]
-]) => {
+  return sql.raw(str.replace(/[^a-zA-Z0-9]+/g, ""));
+};
+sql.liter = (
+  ...args:
+    | [str: string]
+    | [rawStrings: ReadonlyArray<string>, ...rawValues: unknown[]]
+) => {
   const str = (() => {
-    if (typeof args[0] === 'string') {
+    if (typeof args[0] === "string") {
       return args[0];
     } else {
       let templateArgs = args as [
@@ -300,10 +309,10 @@ sql.liter = (...args: [str: string] | [
         ...rawValues: unknown[]
       ];
 
-      let result = templateArgs[0][0]
+      let result = templateArgs[0][0];
 
       for (let i = 1; i < templateArgs[0].length; i++) {
-        result = result.concat(templateArgs[i] as string)
+        result = result.concat(templateArgs[i] as string);
       }
 
       return result;
@@ -324,11 +333,7 @@ sql.join = (
 ) => {
   values = values.filter((v) => (isSql(v) ? !v.toSql().isEmpty : true));
 
-  if (values.length === 0) {
-    throw new TypeError(
-      "Expected `join([])` to be called with an array of multiple elements, but got an empty array"
-    );
-  }
+  if (values.length === 0) return sql.empty;
 
   return internalSql(
     [prefix, ...Array(values.length - 1).fill(separator), suffix],
