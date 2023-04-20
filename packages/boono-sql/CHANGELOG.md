@@ -1,5 +1,12 @@
 # @kikko-land/boono-sql
 
+## 0.4.0
+
+### Minor Changes
+
+- 72cefb8: Bump
+- c542319: Don't throw error on empty join
+
 ## 0.3.0
 
 ### Minor Changes
